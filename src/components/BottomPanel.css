@@ -1,0 +1,27 @@
+/* src/components/BottomPanel.css */
+.bottom-panel {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  padding: 8px;
+}
+.bottom-panel .tab-bar {
+  display: flex;
+  border-bottom: 1px solid #444;
+}
+.bottom-panel .tab-bar button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  color: #aaa;
+  cursor: pointer;
+  font-weight: 600;
+}
+.bottom-panel .tab-bar button.active {
+  background: #2d2d2d;
+  color: #fff;
+}
+.bottom-panel .tab-content {
+  max-height: 200px;
+  overflow-y: auto;
+}

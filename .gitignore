@@ -1,0 +1,40 @@
+# Node
+node_modules/
+dist/
+dist-desktop/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+*.apk
+*.aab
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Electron
+win-unpacked/
+win-unpacked.tmp/
+
+# Chaquopy
+*.imy

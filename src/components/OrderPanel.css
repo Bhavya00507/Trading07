@@ -1,0 +1,179 @@
+/* src/components/OrderPanel.css */
+.order-panel-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.order-instrument-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+/* Buy/Sell Tabs */
+.side-selector-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background-color: var(--bg-primary);
+}
+
+.side-tab {
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.side-tab.buy.active {
+  background-color: var(--success-bg);
+  color: var(--success);
+  box-shadow: inset 0 -2px 0 var(--success);
+}
+
+.side-tab.sell.active {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+  box-shadow: inset 0 -2px 0 var(--danger);
+}
+
+/* Form Container */
+.order-inputs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+.order-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-input-group label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+.order-field {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.order-field:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Leverage Slider */
+.leverage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leverage-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.leverage-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-color);
+  outline: none;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.leverage-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.leverage-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* SL/TP Grid */
+.order-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Margin summary */
+.margin-required-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.margin-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.margin-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Execution Button */
+.execute-order-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-top: 16px;
+}

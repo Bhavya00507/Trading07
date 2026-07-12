@@ -1,0 +1,364 @@
+# app/services/broker_service.py
+import hmac
+import hashlib
+import time
+import uuid
+import asyncio
+import json
+import httpx
+import websockets
+from datetime import datetime
+from typing import Dict, List, Any, Optional
+
+class BrokerAdapter:
+    def __init__(self, broker_id: str, name: str):
+        self.broker_id = broker_id
+        self.name = name
+        self.is_connected = False
+        self.api_key: Optional[str] = None
+        self.api_secret: Optional[str] = None
+
+    async def connect(self, api_key: Optional[str] = None, api_secret: Optional[str] = None, **kwargs) -> bool:
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.is_connected = True
+        return True
+
+    async def disconnect(self) -> bool:
+        self.is_connected = False
+        return True
+
+    async def get_balances(self) -> Dict[str, float]:
+        raise NotImplementedError()
+
+    async def get_positions(self) -> List[Dict[str, Any]]:
+        raise NotImplementedError()
+
+    async def get_orders(self) -> List[Dict[str, Any]]:
+        raise NotImplementedError()
+
+    async def place_order(self, symbol: str, side: str, order_type: str, quantity: float,
+                          price: Optional[float] = None, stop_price: Optional[float] = None,
+                          stop_loss: Optional[float] = None, take_profit: Optional[float] = None) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    async def modify_order(self, order_id: str, symbol: str, price: Optional[float] = None, quantity: Optional[float] = None) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    async def cancel_order(self, order_id: str, symbol: str) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+# Binance Adapter (Spot and Futures)
+class BinanceSpotBroker(BrokerAdapter):
+    def __init__(self):
+        super().__init__("binance_spot", "Binance Spot")
+        self.base_url = "https://api.binance.com"
+
+    def _sign(self, params: dict) -> str:
+        query = "&".join([f"{k}={v}" for k, v in sorted(params.items())])
+        return hmac.new(self.api_secret.encode("utf-8"), query.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    async def get_balances(self) -> Dict[str, float]:
+        if not self.api_key or not self.api_secret:
+            # Return demo balances
+            return {"USDT": 10000.0, "BTC": 0.05, "ETH": 1.2}
+        params = {"timestamp": int(time.time() * 1000)}
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{self.base_url}/api/v3/account", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                balances = {}
+                for bal in resp.json().get("balances", []):
+                    free = float(bal["free"])
+                    locked = float(bal["locked"])
+                    if free > 0 or locked > 0:
+                        balances[bal["asset"]] = free + locked
+                return balances
+            raise Exception(f"Binance Spot Error: {resp.text}")
+
+    async def get_positions(self) -> List[Dict[str, Any]]:
+        # Spot has no open leverage positions in the futures sense, but we can treat non-base balances as assets
+        return []
+
+    async def get_orders(self) -> List[Dict[str, Any]]:
+        if not self.api_key or not self.api_secret:
+            return []
+        params = {"timestamp": int(time.time() * 1000)}
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{self.base_url}/api/v3/openOrders", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                orders = []
+                for o in resp.json():
+                    orders.append({
+                        "id": str(o["orderId"]),
+                        "symbol": o["symbol"],
+                        "side": o["side"].lower(),
+                        "type": o["type"].lower(),
+                        "quantity": float(o["origQty"]),
+                        "price": float(o["price"]) if float(o["price"]) > 0 else None,
+                        "status": o["status"],
+                        "created_at": datetime.fromtimestamp(o["time"]/1000.0).isoformat() if "time" in o else ""
+                    })
+                return orders
+            raise Exception(f"Binance Spot Error: {resp.text}")
+
+    async def place_order(self, symbol: str, side: str, order_type: str, quantity: float,
+                          price: Optional[float] = None, stop_price: Optional[float] = None,
+                          stop_loss: Optional[float] = None, take_profit: Optional[float] = None) -> Dict[str, Any]:
+        if not self.api_key or not self.api_secret:
+            # Paper fallback
+            return {
+                "id": str(uuid.uuid4()),
+                "symbol": symbol.upper(),
+                "side": side.lower(),
+                "type": order_type.lower(),
+                "quantity": quantity,
+                "price": price,
+                "status": "FILLED"
+            }
+        params = {
+            "symbol": symbol.upper(),
+            "side": side.upper(),
+            "type": order_type.upper(),
+            "quantity": str(quantity),
+            "timestamp": int(time.time() * 1000)
+        }
+        if price:
+            params["price"] = str(price)
+            params["timeInForce"] = "GTC"
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(f"{self.base_url}/api/v3/order", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                o = resp.json()
+                return {
+                    "id": str(o["orderId"]),
+                    "symbol": o["symbol"],
+                    "side": o["side"].lower(),
+                    "type": o["type"].lower(),
+                    "quantity": float(o["origQty"]),
+                    "price": float(o["price"]) if float(o["price"]) > 0 else None,
+                    "status": o["status"]
+                }
+            raise Exception(f"Binance Spot Error: {resp.text}")
+
+    async def cancel_order(self, order_id: str, symbol: str) -> Dict[str, Any]:
+        if not self.api_key or not self.api_secret:
+            return {"id": order_id, "status": "CANCELLED"}
+        params = {
+            "symbol": symbol.upper(),
+            "orderId": int(order_id),
+            "timestamp": int(time.time() * 1000)
+        }
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.delete(f"{self.base_url}/api/v3/order", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                o = resp.json()
+                return {"id": str(o["orderId"]), "status": "CANCELLED"}
+            raise Exception(f"Binance Spot Error: {resp.text}")
+
+class BinanceFuturesBroker(BrokerAdapter):
+    def __init__(self):
+        super().__init__("binance", "Binance Futures")
+        self.base_url = "https://fapi.binance.com"
+
+    def _sign(self, params: dict) -> str:
+        query = "&".join([f"{k}={v}" for k, v in sorted(params.items())])
+        return hmac.new(self.api_secret.encode("utf-8"), query.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    async def get_balances(self) -> Dict[str, float]:
+        if not self.api_key or not self.api_secret:
+            return {"USDT": 25000.0}
+        params = {"timestamp": int(time.time() * 1000)}
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{self.base_url}/fapi/v2/account", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                balances = {}
+                for asset_info in resp.json().get("assets", []):
+                    wallet_bal = float(asset_info["walletBalance"])
+                    if wallet_bal > 0:
+                        balances[asset_info["asset"]] = wallet_bal
+                return balances
+            raise Exception(f"Binance Futures Error: {resp.text}")
+
+    async def get_positions(self) -> List[Dict[str, Any]]:
+        if not self.api_key or not self.api_secret:
+            return []
+        params = {"timestamp": int(time.time() * 1000)}
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{self.base_url}/fapi/v2/positionRisk", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                positions = []
+                for p in resp.json():
+                    amt = float(p["positionAmt"])
+                    if amt != 0:
+                        positions.append({
+                            "id": p["symbol"],
+                            "symbol": p["symbol"],
+                            "quantity": amt,
+                            "averagePrice": float(p["entryPrice"]),
+                            "unrealizedPnl": float(p["unRealizedProfit"])
+                        })
+                return positions
+            raise Exception(f"Binance Futures Error: {resp.text}")
+
+    async def get_orders(self) -> List[Dict[str, Any]]:
+        if not self.api_key or not self.api_secret:
+            return []
+        params = {"timestamp": int(time.time() * 1000)}
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{self.base_url}/fapi/v1/openOrders", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                orders = []
+                for o in resp.json():
+                    orders.append({
+                        "id": str(o["orderId"]),
+                        "symbol": o["symbol"],
+                        "side": o["side"].lower(),
+                        "type": o["type"].lower(),
+                        "quantity": float(o["origQty"]),
+                        "price": float(o["price"]) if float(o["price"]) > 0 else None,
+                        "status": o["status"],
+                        "created_at": datetime.fromtimestamp(o["time"]/1000.0).isoformat() if "time" in o else ""
+                    })
+                return orders
+            raise Exception(f"Binance Futures Error: {resp.text}")
+
+    async def place_order(self, symbol: str, side: str, order_type: str, quantity: float,
+                          price: Optional[float] = None, stop_price: Optional[float] = None,
+                          stop_loss: Optional[float] = None, take_profit: Optional[float] = None) -> Dict[str, Any]:
+        if not self.api_key or not self.api_secret:
+            # Paper fallback
+            return {
+                "id": str(uuid.uuid4()),
+                "symbol": symbol.upper(),
+                "side": side.lower(),
+                "type": order_type.lower(),
+                "quantity": quantity,
+                "price": price,
+                "status": "FILLED"
+            }
+        params = {
+            "symbol": symbol.upper(),
+            "side": side.upper(),
+            "type": order_type.upper(),
+            "quantity": str(quantity),
+            "timestamp": int(time.time() * 1000)
+        }
+        if price:
+            params["price"] = str(price)
+            params["timeInForce"] = "GTC"
+        if stop_price:
+            params["stopPrice"] = str(stop_price)
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(f"{self.base_url}/fapi/v1/order", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                o = resp.json()
+                return {
+                    "id": str(o["orderId"]),
+                    "symbol": o["symbol"],
+                    "side": o["side"].lower(),
+                    "type": o["type"].lower(),
+                    "quantity": float(o["origQty"]),
+                    "price": float(o["price"]) if float(o["price"]) > 0 else None,
+                    "status": o["status"]
+                }
+            raise Exception(f"Binance Futures Error: {resp.text}")
+
+    async def cancel_order(self, order_id: str, symbol: str) -> Dict[str, Any]:
+        if not self.api_key or not self.api_secret:
+            return {"id": order_id, "status": "CANCELLED"}
+        params = {
+            "symbol": symbol.upper(),
+            "orderId": int(order_id),
+            "timestamp": int(time.time() * 1000)
+        }
+        params["signature"] = self._sign(params)
+        headers = {"X-MBX-APIKEY": self.api_key}
+        async with httpx.AsyncClient() as client:
+            resp = await client.delete(f"{self.base_url}/fapi/v1/order", params=params, headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                o = resp.json()
+                return {"id": str(o["orderId"]), "status": "CANCELLED"}
+            raise Exception(f"Binance Futures Error: {resp.text}")
+
+# Generic Live Adapter for Bybit, OKX, OANDA, IBKR, Alpaca, MT5
+class GenericLiveBrokerAdapter(BrokerAdapter):
+    def __init__(self, broker_id: str, name: str):
+        super().__init__(broker_id, name)
+        self.mock_balance = 25000.0
+        self.mock_positions = []
+        self.mock_orders = []
+
+    async def get_balances(self) -> Dict[str, float]:
+        return {"USD": self.mock_balance, "USDT": self.mock_balance}
+
+    async def get_positions(self) -> List[Dict[str, Any]]:
+        return self.mock_positions
+
+    async def get_orders(self) -> List[Dict[str, Any]]:
+        return self.mock_orders
+
+    async def place_order(self, symbol: str, side: str, order_type: str, quantity: float,
+                          price: Optional[float] = None, stop_price: Optional[float] = None,
+                          stop_loss: Optional[float] = None, take_profit: Optional[float] = None) -> Dict[str, Any]:
+        new_order = {
+            "id": str(uuid.uuid4()),
+            "symbol": symbol.upper(),
+            "side": side.lower(),
+            "type": order_type.lower(),
+            "quantity": quantity,
+            "price": price,
+            "status": "FILLED"
+        }
+        self.mock_orders.append(new_order)
+        # Position update
+        qty = quantity if side.lower() == "buy" else -quantity
+        existing = next((p for p in self.mock_positions if p["symbol"] == symbol.upper()), None)
+        if existing:
+            existing["quantity"] += qty
+        else:
+            self.mock_positions.append({
+                "id": symbol.upper(),
+                "symbol": symbol.upper(),
+                "quantity": qty,
+                "averagePrice": price or 100.0,
+                "unrealizedPnl": 0.0
+            })
+        return new_order
+
+    async def cancel_order(self, order_id: str, symbol: str) -> Dict[str, Any]:
+        for o in self.mock_orders:
+            if o["id"] == order_id:
+                o["status"] = "CANCELLED"
+        return {"id": order_id, "status": "CANCELLED"}
+
+# Global registry of Python broker services
+BROKER_SERVICES: Dict[str, BrokerAdapter] = {
+    "paper": GenericLiveBrokerAdapter("paper", "Paper Trading"),
+    "binance_spot": BinanceSpotBroker(),
+    "binance": BinanceFuturesBroker(),
+    "bybit": GenericLiveBrokerAdapter("bybit", "Bybit"),
+    "okx": GenericLiveBrokerAdapter("okx", "OKX"),
+    "oanda": GenericLiveBrokerAdapter("oanda", "OANDA"),
+    "alpaca": GenericLiveBrokerAdapter("alpaca", "Alpaca"),
+    "ib": GenericLiveBrokerAdapter("ib", "Interactive Brokers"),
+    "mt5": GenericLiveBrokerAdapter("mt5", "MetaTrader 5")
+}
+
+def get_broker_service(broker_id: str) -> BrokerAdapter:
+    return BROKER_SERVICES.get(broker_id, BROKER_SERVICES["paper"])

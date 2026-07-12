@@ -1,0 +1,17 @@
+{
+  "ignoreDeprecations": "6.0",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+  "ignoreDeprecations": "6.0",
+    "composite": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
+}

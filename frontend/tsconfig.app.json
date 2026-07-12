@@ -1,0 +1,20 @@
+{
+  "ignoreDeprecations": "6.0",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+  "ignoreDeprecations": "6.0",
+    "jsx": "react-jsx",
+    "outDir": "./dist",
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "lib": ["DOM", "ESNext"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
