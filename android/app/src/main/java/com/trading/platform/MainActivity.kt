@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var splashView: View
     private lateinit var statusTextView: TextView
     private lateinit var progressBar: ProgressBar
-    private var activeBackendUrl = "https://api.myserver.com/"
+    private var activeBackendUrl = "https://trading07-backend.onrender.com/"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,50 +40,12 @@ class MainActivity : AppCompatActivity() {
         initApp()
     }
 
-    private fun checkBackendHealthy(urlStr: String): Boolean {
-        return try {
-            val url = java.net.URL(urlStr)
-            val conn = url.openConnection() as java.net.HttpURLConnection
-            conn.requestMethod = "GET"
-            conn.connectTimeout = 800
-            conn.readTimeout = 800
-            val code = conn.responseCode
-            conn.disconnect()
-            code == 200
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     private fun initApp() {
-        statusTextView.text = "Checking connection to host PC backend..."
-        Thread {
-            val candidateHosts = ArrayList<String>()
-            candidateHosts.add("10.0.2.2") // Emulator host loopback
-            candidateHosts.add("192.168.1.3") // Current dev machine static LAN IP
-            candidateHosts.add("192.168.1.7") // Dev machine static LAN IP fallback
-            
-            var foundHost: String? = null
-            for (host in candidateHosts) {
-                val testUrl = "http://$host:8000/health"
-                Log.d("MainActivity", "Probing host backend at $testUrl ...")
-                if (checkBackendHealthy(testUrl)) {
-                    foundHost = host
-                    break
-                }
-            }
-            
-            runOnUiThread {
-                if (foundHost != null) {
-                    activeBackendUrl = "http://$foundHost:8000/"
-                    Log.i("MainActivity", "Found active host PC backend at $activeBackendUrl. Loading host frontend.")
-                } else {
-                    activeBackendUrl = "https://api.myserver.com/"
-                    Log.i("MainActivity", "No host PC backend found. Defaulting to production centralized backend: $activeBackendUrl")
-                }
-                setupAndLoadWebView()
-            }
-        }.start()
+        runOnUiThread {
+            activeBackendUrl = "https://trading07-backend.onrender.com/"
+            Log.i("MainActivity", "Loading production centralized backend: $activeBackendUrl")
+            setupAndLoadWebView()
+        }
     }
 
     private fun setupAndLoadWebView() {

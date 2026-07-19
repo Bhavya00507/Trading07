@@ -15,7 +15,7 @@ const isDev = !app.isPackaged;
 
 if (!isDev) {
   process.env.NODE_ENV = 'production';
-  process.env.VITE_API_URL = process.env.VITE_API_URL || 'https://api.myserver.com';
+  process.env.VITE_API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://trading07-backend.onrender.com';
 }
 
 // Single instance lock protection

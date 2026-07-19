@@ -383,10 +383,8 @@ async def startup_event():
     print("=============================\n")
     
     print("\nBackend running\n")
-    print("http://localhost:8000\n")
-    print("http://127.0.0.1:8000\n")
-    print("http://192.168.1.7:8000\n")
-    print("Swagger:\nhttp://192.168.1.7:8000/docs\n")
+    print("Production URL: https://trading07-backend.onrender.com\n")
+    print("Swagger:\nhttps://trading07-backend.onrender.com/docs\n")
 
 
 # ── Static frontend serving ────────────────────────────────────────────────────
@@ -500,21 +498,17 @@ def _auto_build_frontend():
         raise RuntimeError("Frontend build completed but dist/index.html was not generated.")
 
 # Resolve mode and auto-build if needed
-_dev_port = _get_dev_server_port()
-if not _dev_port:
-    try:
-        _auto_build_frontend()
-    except Exception as e:
-        print(f"Error checking/building frontend: {e}", file=sys.stderr)
+try:
+    _auto_build_frontend()
+except Exception as e:
+    print(f"Error checking/building frontend: {e}", file=sys.stderr)
 
 _dist = _get_dist_dir()
-if _dist and not _dev_port:
+if _dist:
     _assets = _dist / "assets"
     if _assets.exists():
         app.mount("/assets", StaticFiles(directory=str(_assets)), name="assets")
     print(f"Static serving: dist={_dist}  assets_exist={(_dist/'assets').exists()}")
-elif _dev_port:
-    print(f"Vite dev server detected on port {_dev_port}. Proxy mode active.")
 else:
     print("WARNING: dist/ directory not found — static serving disabled")
 
@@ -524,44 +518,9 @@ _API_PREFIXES = ("api/", "ws", "auth/", "orders", "positions", "history",
                  "playbooks", "paper", "health", "metrics", "ping",
                  "docs", "redoc", "openapi.json", "assets/")
 
-_client = httpx.AsyncClient(timeout=10.0)
-
-async def _proxy_to_dev_server(request: Request, port: int, path: str):
-    url = f"http://127.0.0.1:{port}/{path}"
-    if request.url.query:
-        url += f"?{request.url.query}"
-    
-    headers = {k: v for k, v in request.headers.items() if k.lower() not in ("host", "accept-encoding")}
-    req_method = request.method
-    req_content = await request.body()
-    
-    try:
-        resp = await _client.request(
-            method=req_method,
-            url=url,
-            headers=headers,
-            content=req_content,
-            follow_redirects=True
-        )
-        res_headers = {k: v for k, v in resp.headers.items() if k.lower() not in ("content-length", "content-encoding", "transfer-encoding")}
-        return StreamingResponse(
-            resp.aiter_bytes(),
-            status_code=resp.status_code,
-            headers=res_headers
-        )
-    except Exception as e:
-        return JSONResponse(
-            status_code=502,
-            content={"error": f"Failed to proxy request to Vite dev server on port {port}: {str(e)}"}
-        )
-
 @app.get("/")
 async def serve_root(request: Request):
-    """Serve the React SPA entry point or proxy to dev server."""
-    dev_port = _get_dev_server_port()
-    if dev_port:
-        return await _proxy_to_dev_server(request, dev_port, "")
-        
+    """Serve the React SPA entry point."""
     dist = _get_dist_dir()
     if dist is None:
         try:
@@ -581,19 +540,11 @@ async def serve_root(request: Request):
 
 @app.get("/{catchall:path}")
 async def serve_react_spa(request: Request, catchall: str):
-    """SPA fallback — return index.html for any non-API path or proxy to dev server."""
-    dev_port = _get_dev_server_port()
+    """SPA fallback — return index.html for any non-API path."""
     if any(catchall.startswith(p) for p in _API_PREFIXES):
-        # Allow assets/ to bypass the block in proxy mode
-        if catchall.startswith("assets/") and dev_port:
-            pass
-        else:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=404, detail=f"Not found: /{catchall}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Not found: /{catchall}")
 
-    if dev_port:
-        return await _proxy_to_dev_server(request, dev_port, catchall)
-        
     dist = _get_dist_dir()
     if dist is None:
         try:
