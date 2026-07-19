@@ -244,3 +244,23 @@ async def get_market_calendar():
         logger.exception("Failed to get economic calendar")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@router.get("/news")
+async def get_market_news_legacy():
+    try:
+        from app.services.news_service import news_service
+        res = await news_service.get_news()
+        return res
+    except Exception as e:
+        logger.exception("Failed to get market news")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@router.get("/calendar")
+async def get_market_calendar_legacy():
+    try:
+        from app.services.news_service import news_service
+        res = await news_service.get_calendar()
+        return res
+    except Exception as e:
+        logger.exception("Failed to get economic calendar")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+

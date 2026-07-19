@@ -7,6 +7,8 @@ import './index.css';
 console.log("FRONTEND BUILD VERSION:", new Date().toISOString());
 // @ts-ignore
 console.log("FRONTEND COMPILE TIME:", __BUILD_TIME__);
+// @ts-ignore
+window.__APP_VERSION__ = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '1.0.0-dev';
 
 // Auto-cleanup stale service workers and caches from other localhost projects
 if ('serviceWorker' in navigator) {

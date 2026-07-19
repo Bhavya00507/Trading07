@@ -17,36 +17,24 @@ if root_env.exists():
 
 import sys
 
-if os.environ.get("ANDROID_BOOT"):
-    # Android production mode - Store database in internal files directory
-    android_data_dir = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files"))
-    android_data_dir.mkdir(parents=True, exist_ok=True)
-    db_path = android_data_dir / "test.db"
-    DATABASE_URL = f"sqlite+aiosqlite:///{db_path.as_posix()}"
-elif getattr(sys, 'frozen', False):
-    # Packaged production mode - Store test.db in user Local AppData
-    app_data_dir = Path(os.environ.get("LOCALAPPDATA", os.path.expanduser("~"))) / "TradingPlatform"
-    app_data_dir.mkdir(parents=True, exist_ok=True)
-    db_path = app_data_dir / "test.db"
-    
-    # Copy seed test.db if not present in AppData
-    if not db_path.exists():
-        import shutil
-        bundled_db = BASE_DIR / "test.db"
-        if bundled_db.exists():
-            try:
-                shutil.copy(bundled_db, db_path)
-            except Exception as e:
-                print(f"Error copying seed db: {e}")
-                
-    env_db_url = os.getenv("DATABASE_URL")
-    if env_db_url and "./test.db" not in env_db_url:
-        DATABASE_URL = env_db_url
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    if os.environ.get("ANDROID_BOOT"):
+        # Android production mode - Store database in internal files directory
+        android_data_dir = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files"))
+        android_data_dir.mkdir(parents=True, exist_ok=True)
+        db_path = android_data_dir / "test.db"
     else:
-        DATABASE_URL = f"sqlite+aiosqlite:///{db_path.as_posix()}"
-else:
-    # Development mode
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
+        # Host PC mode: Force both dev and frozen desktop app backend to use the exact same test.db
+        # If the workspace D:/Trading07/backend exists, use it. Otherwise, use relative path.
+        workspace_db = Path("D:/Trading07/backend/test.db")
+        if workspace_db.parent.exists():
+            db_path = workspace_db
+        else:
+            # Fallback to the absolute path of test.db in backend folder
+            db_path = (Path(__file__).resolve().parent.parent.parent / "test.db")
+    DATABASE_URL = f"sqlite+aiosqlite:///{db_path.as_posix()}"
 
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-production-trading-core-key-2026")
 JWT_ALGORITHM = "HS256"

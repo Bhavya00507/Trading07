@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy[asyncio]
 psycopg[binary]
+asyncpg
 python-dotenv
 pyjwt
 websockets

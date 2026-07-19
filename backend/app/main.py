@@ -1,3 +1,40 @@
+import pydantic
+if pydantic.__version__.startswith("1."):
+    from pydantic import BaseModel
+    import json as _json, uuid as _uuid, datetime as _dt
+
+    if not hasattr(BaseModel, "model_validate"):
+        @classmethod
+        def model_validate(cls, obj, *args, **kwargs):
+            return cls.from_orm(obj)
+        BaseModel.model_validate = model_validate
+
+    if not hasattr(BaseModel, "model_dump"):
+        def model_dump(self, *args, **kwargs):
+            mode = kwargs.pop("mode", None)
+            exclude_none = kwargs.pop("exclude_none", False)
+            d = self.dict(exclude_none=exclude_none)
+            if mode == "json":
+                # Recursively convert non-JSON-safe types
+                def _jsonify(obj):
+                    if isinstance(obj, dict):
+                        return {k: _jsonify(v) for k, v in obj.items()}
+                    if isinstance(obj, list):
+                        return [_jsonify(i) for i in obj]
+                    if isinstance(obj, (_uuid.UUID,)):
+                        return str(obj)
+                    if isinstance(obj, (_dt.datetime, _dt.date)):
+                        return obj.isoformat()
+                    return obj
+                return _jsonify(d)
+            return d
+        BaseModel.model_dump = model_dump
+
+    if not hasattr(BaseModel, "model_dump_json"):
+        def model_dump_json(self, *args, **kwargs):
+            return self.json()
+        BaseModel.model_dump_json = model_dump_json
+
 import uvicorn
 import asyncio
 from fastapi import FastAPI
@@ -110,66 +147,27 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         }
     )
 
-# @app.middleware("http")
-async def metrics_middleware(request: Request, call_next):
+@app.middleware("http")
+async def safe_logging_middleware(request: Request, call_next):
     method = request.method
     path = request.url.path
-    if path == "/metrics":
-        return await call_next(request)
-        
-    # Log incoming request payload for POST/PATCH/PUT
-    body_data = b""
-    if method in ["POST", "PATCH", "PUT"]:
-        body_bytes = await request.body()
-        original_receive = request._receive
-        body_delivered = False
-        async def receive():
-            nonlocal body_delivered
-            if not body_delivered:
-                body_delivered = True
-                return {"type": "http.request", "body": body_bytes, "more_body": False}
-            # Subsequent calls (e.g. Uvicorn checking for client disconnects) must delegate to the original receive channel
-            return await original_receive()
-        request._receive = receive
-        body_data = body_bytes
-        
-    is_high_freq = path in ["/market/candles", "/health", "/metrics"] or path.startswith("/static")
-    should_log = not is_high_freq
     
-    if should_log:
-        print(f"--> Incoming Request: {method} {path} Payload: {body_data.decode('utf-8', errors='ignore')}")
+    is_high_freq = path in ["/market/candles", "/health", "/metrics", "/ping"] or path.startswith("/static") or path.startswith("/assets")
     
-    request.state.start_time = time.time()
-    start_time = request.state.start_time
+    if not is_high_freq:
+        print(f"--> [API REQUEST] {method} {path}")
+        
+    start_time = time.time()
     try:
         response = await call_next(request)
-        status_code = response.status_code
         duration = time.time() - start_time
-        if should_log or duration > 0.1:
-            print(f"<-- Response Status: {status_code} for {method} {path} (took {duration*1000.0:.2f} ms)")
+        if not is_high_freq:
+            print(f"<-- [API RESPONSE] {response.status_code} for {method} {path} (took {duration*1000.0:.2f} ms)")
+        return response
     except Exception as e:
         duration = time.time() - start_time
-        print(f"!!! Server Error: {str(e)} for {method} {path} (took {duration*1000.0:.2f} ms)")
-        status_code = 500
+        print(f"!!! [API ERROR] {method} {path} failed: {e} (took {duration*1000.0:.2f} ms)")
         raise e
-    finally:
-        _request_counter[(method, path, status_code)] += 1
-        key = (method, path)
-        if key not in _request_latencies:
-            _request_latencies[key] = []
-        _request_latencies[key].append(duration)
-        if len(_request_latencies[key]) > 100:
-            _request_latencies[key].pop(0)
-    return response
-
-# @app.middleware("http")
-async def debug(request: Request, call_next):
-    print("=" * 80)
-    print("REQUEST:", request.method, request.url)
-    response = await call_next(request)
-    print("RESPONSE:", response.status_code)
-    print("=" * 80)
-    return response
 
 @app.get("/metrics", response_class=PlainTextResponse, tags=["metrics"])
 async def metrics_endpoint():
@@ -339,10 +337,47 @@ async def startup_event():
     try:
         import os
         from app.core.config import DATABASE_URL
-        from app.database.session import engine
+        from app.database.session import engine, AsyncSessionLocal
+        from app.models.user import User
+        from sqlalchemy import func
         print(f"DATABASE_URL from config: {DATABASE_URL}")
         print(f"Engine URL: {engine.url}")
         print(f"Current Working Directory: {os.getcwd()}")
+        
+        users_count = 0
+        if "postgresql" in DATABASE_URL:
+            try:
+                async with AsyncSessionLocal() as session:
+                    res = await session.execute(select(func.count(User.id)))
+                    users_count = res.scalar() or 0
+            except Exception as ex:
+                print(f"Error querying users count: {ex}")
+            print("\nDATABASE:")
+            print("Type: PostgreSQL (Production/Centralized)")
+            print(f"Users: {users_count}\n")
+        else:
+            clean_url = DATABASE_URL
+            if "///" in clean_url:
+                db_path_str = clean_url.split("///")[1]
+            else:
+                db_path_str = clean_url
+            abs_path = os.path.abspath(db_path_str)
+            exists = os.path.exists(abs_path)
+            size = os.path.getsize(abs_path) if exists else 0
+            
+            if exists:
+                try:
+                    async with AsyncSessionLocal() as session:
+                        res = await session.execute(select(func.count(User.id)))
+                        users_count = res.scalar() or 0
+                except Exception as ex:
+                    print(f"Error querying users count: {ex}")
+                    
+            print("\nDATABASE:")
+            print(f"Path: {abs_path}")
+            print(f"Exists: {exists}")
+            print(f"Size: {size} bytes")
+            print(f"Users: {users_count}\n")
     except Exception as e:
         print(f"Error printing startup database info: {e}")
     print("=============================\n")
@@ -361,25 +396,125 @@ async def startup_event():
 # so that a module-level check that momentarily runs before extraction doesn't
 # permanently disable serving.
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 import os
+import sys
+import socket
+import subprocess
+import shutil
+import httpx
 from pathlib import Path
+
+def _is_dev_server_running(port: int) -> bool:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.1)
+            s.connect(("127.0.0.1", port))
+            return True
+    except Exception:
+        return False
+
+def _get_dev_server_port() -> int | None:
+    for port in (5173, 4173):
+        if _is_dev_server_running(port):
+            return port
+    return None
+
+def _get_repo_root() -> Path:
+    if getattr(sys, 'frozen', False):
+        exe_path = Path(sys.executable).resolve()
+        curr = exe_path.parent
+        for _ in range(10):
+            if (curr / "package.json").exists():
+                return curr
+            curr = curr.parent
+        return exe_path.parent.parent.parent.parent
+    else:
+        curr = Path(__file__).resolve().parent
+        for _ in range(10):
+            if (curr / "package.json").exists():
+                return curr
+            curr = curr.parent
+        return Path(__file__).resolve().parent.parent.parent
 
 def _get_dist_dir() -> Path | None:
     if os.environ.get("ANDROID_BOOT"):
         p = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files")) / "dist"
         return p if p.exists() else None
     # Desktop / dev: look for the built dist next to the repo root
-    p = Path(__file__).resolve().parent.parent.parent / "dist"
+    p = _get_repo_root() / "dist"
     return p if p.exists() else None
 
-# Mount /assets statically (lazy — evaluate at startup after env is set)
+def _auto_build_frontend():
+    if os.environ.get("ANDROID_BOOT"):
+        # On Android WebView we skip NPM build checks
+        dist_dir = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files")) / "dist"
+        if not dist_dir.exists() or not (dist_dir / "index.html").exists():
+            raise RuntimeError("Frontend dist folder is missing on Android. Please extract assets correctly.")
+        return
+
+    frontend_root = _get_repo_root()
+    dist_dir = frontend_root / "dist"
+    
+    if dist_dir.exists() and (dist_dir / "index.html").exists():
+        return
+        
+    print("Frontend dist not found. Starting automatic build...")
+    
+    npm_path = shutil.which("npm") or shutil.which("npm.cmd")
+    if not npm_path:
+        raise RuntimeError("npm is not installed. Node.js and npm must be installed to compile the frontend automatically.")
+        
+    print(f"Detected frontend root: {frontend_root}")
+    print("Executing: npm install ...")
+    try:
+        subprocess.run(
+            ["npm", "install"],
+            cwd=str(frontend_root),
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        print("npm install completed successfully.")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"npm install failed: {e.stderr or e.stdout}")
+        
+    print("Executing: npm run build ...")
+    try:
+        subprocess.run(
+            ["npm", "run", "build"],
+            cwd=str(frontend_root),
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        print("npm run build completed successfully.")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"npm run build failed: {e.stderr or e.stdout}")
+        
+    if not dist_dir.exists() or not (dist_dir / "index.html").exists():
+        raise RuntimeError("Frontend build completed but dist/index.html was not generated.")
+
+# Resolve mode and auto-build if needed
+_dev_port = _get_dev_server_port()
+if not _dev_port:
+    try:
+        _auto_build_frontend()
+    except Exception as e:
+        print(f"Error checking/building frontend: {e}", file=sys.stderr)
+
 _dist = _get_dist_dir()
-if _dist:
+if _dist and not _dev_port:
     _assets = _dist / "assets"
     if _assets.exists():
         app.mount("/assets", StaticFiles(directory=str(_assets)), name="assets")
     print(f"Static serving: dist={_dist}  assets_exist={(_dist/'assets').exists()}")
+elif _dev_port:
+    print(f"Vite dev server detected on port {_dev_port}. Proxy mode active.")
 else:
     print("WARNING: dist/ directory not found — static serving disabled")
 
@@ -389,38 +524,91 @@ _API_PREFIXES = ("api/", "ws", "auth/", "orders", "positions", "history",
                  "playbooks", "paper", "health", "metrics", "ping",
                  "docs", "redoc", "openapi.json", "assets/")
 
+_client = httpx.AsyncClient(timeout=10.0)
+
+async def _proxy_to_dev_server(request: Request, port: int, path: str):
+    url = f"http://127.0.0.1:{port}/{path}"
+    if request.url.query:
+        url += f"?{request.url.query}"
+    
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in ("host", "accept-encoding")}
+    req_method = request.method
+    req_content = await request.body()
+    
+    try:
+        resp = await _client.request(
+            method=req_method,
+            url=url,
+            headers=headers,
+            content=req_content,
+            follow_redirects=True
+        )
+        res_headers = {k: v for k, v in resp.headers.items() if k.lower() not in ("content-length", "content-encoding", "transfer-encoding")}
+        return StreamingResponse(
+            resp.aiter_bytes(),
+            status_code=resp.status_code,
+            headers=res_headers
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=502,
+            content={"error": f"Failed to proxy request to Vite dev server on port {port}: {str(e)}"}
+        )
+
 @app.get("/")
-async def serve_root():
-    """Serve the React SPA entry point."""
+async def serve_root(request: Request):
+    """Serve the React SPA entry point or proxy to dev server."""
+    dev_port = _get_dev_server_port()
+    if dev_port:
+        return await _proxy_to_dev_server(request, dev_port, "")
+        
     dist = _get_dist_dir()
     if dist is None:
-        return JSONResponse(
-            status_code=503,
-            content={"error": "Frontend dist not found. Run: npm run build"}
-        )
-    index = dist / "index.html"
-    if index.exists():
-        return FileResponse(str(index), media_type="text/html")
-    return JSONResponse(status_code=404, content={"error": "index.html not found in dist"})
+        try:
+            _auto_build_frontend()
+            dist = _get_dist_dir()
+        except Exception as e:
+            return JSONResponse(
+                status_code=503,
+                content={"error": f"Frontend dist not found and auto-build failed: {str(e)}"}
+            )
+            
+    if dist:
+        index = dist / "index.html"
+        if index.exists():
+            return FileResponse(str(index), media_type="text/html")
+    return JSONResponse(status_code=404, content={"error": "index.html not found"})
 
 @app.get("/{catchall:path}")
-async def serve_react_spa(catchall: str):
-    """SPA fallback — return index.html for any non-API path."""
-    # Let real API routes handle themselves
+async def serve_react_spa(request: Request, catchall: str):
+    """SPA fallback — return index.html for any non-API path or proxy to dev server."""
+    dev_port = _get_dev_server_port()
     if any(catchall.startswith(p) for p in _API_PREFIXES):
-        # Fall through to FastAPI's normal 404 for unknown API paths
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail=f"Not found: /{catchall}")
+        # Allow assets/ to bypass the block in proxy mode
+        if catchall.startswith("assets/") and dev_port:
+            pass
+        else:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail=f"Not found: /{catchall}")
 
+    if dev_port:
+        return await _proxy_to_dev_server(request, dev_port, catchall)
+        
     dist = _get_dist_dir()
     if dist is None:
-        return JSONResponse(
-            status_code=503,
-            content={"error": "Frontend dist not found"}
-        )
-    index = dist / "index.html"
-    if index.exists():
-        return FileResponse(str(index), media_type="text/html")
+        try:
+            _auto_build_frontend()
+            dist = _get_dist_dir()
+        except Exception as e:
+            return JSONResponse(
+                status_code=503,
+                content={"error": f"Frontend dist not found and auto-build failed: {str(e)}"}
+            )
+            
+    if dist:
+        index = dist / "index.html"
+        if index.exists():
+            return FileResponse(str(index), media_type="text/html")
     return JSONResponse(status_code=404, content={"error": "index.html missing"})
 
 

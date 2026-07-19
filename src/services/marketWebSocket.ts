@@ -165,7 +165,8 @@ class MarketWebSocket {
 
     this._intentionalClose = false;
     this.setStatus('connecting');
-    const wsUrl = `${this.url}?token=${encodeURIComponent(token)}`;
+    const currentWsUrl = getWsUrl();
+    const wsUrl = `${currentWsUrl}?token=${encodeURIComponent(token)}`;
     try {
       this.ws = new WebSocket(wsUrl);
 

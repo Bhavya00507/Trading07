@@ -77,14 +77,14 @@ async def register(req: RegisterRequest, db=Depends(get_db)):
     import sys, os
     from app.core.config import DATABASE_URL
     from app.database.session import engine
-    print("=== REGISTER DATABASE INFO ===", file=sys.stderr)
-    print(f"DATABASE_URL: {DATABASE_URL}", file=sys.stderr)
-    try:
-        print(f"Engine URL: {engine.url}", file=sys.stderr)
-    except Exception as e:
-        print(f"Error printing engine URL: {e}", file=sys.stderr)
-    print(f"Current Working Directory: {os.getcwd()}", file=sys.stderr)
-    print("==============================", file=sys.stderr)
+    
+    clean_url = DATABASE_URL
+    if "///" in clean_url:
+        db_path_str = clean_url.split("///")[1]
+    else:
+        db_path_str = clean_url
+    abs_path = os.path.abspath(db_path_str)
+    print(f"INSERT DATABASE PATH: {abs_path}", file=sys.stderr)
 
     print("REGISTER FUNCTION ENTERED", file=sys.stderr)
     print(f"[REGISTER] Request received: username={req.username!r} email={req.email!r}")
@@ -183,24 +183,29 @@ async def login(req: LoginRequest, db=Depends(get_db)):
     import sys, os
     from app.core.config import DATABASE_URL
     from app.database.session import engine
-    print("=== LOGIN DATABASE INFO ===", file=sys.stderr)
-    print(f"DATABASE_URL: {DATABASE_URL}", file=sys.stderr)
-    try:
-        print(f"Engine URL: {engine.url}", file=sys.stderr)
-    except Exception as e:
-        print(f"Error printing engine URL: {e}", file=sys.stderr)
-    print(f"Current Working Directory: {os.getcwd()}", file=sys.stderr)
-    print("===========================", file=sys.stderr)
+    from sqlalchemy import func
+    
+    clean_url = DATABASE_URL
+    if "///" in clean_url:
+        db_path_str = clean_url.split("///")[1]
+    else:
+        db_path_str = clean_url
+    abs_path = os.path.abspath(db_path_str)
+    print(f"SELECT DATABASE PATH: {abs_path}", file=sys.stderr)
 
+    # Print users info before authentication
     try:
-        print("=== USERS IN DATABASE BEFORE LOGIN ===", file=sys.stderr)
+        count_res = await db.execute(select(func.count(User.id)))
+        users_count = count_res.scalar() or 0
+        print(f"SELECT COUNT(*) FROM users: {users_count}", file=sys.stderr)
+        
         users_res = await db.execute(select(User.username, User.email))
         rows = users_res.all()
+        print("SELECT username,email FROM users:", file=sys.stderr)
         for r in rows:
-            print(f"User: username={r[0]} email={r[1]}", file=sys.stderr)
-        print("=======================================", file=sys.stderr)
+            print(f"  username={r[0]}, email={r[1]}", file=sys.stderr)
     except Exception as query_exc:
-        print(f"Error querying users in login: {query_exc}", file=sys.stderr)
+        print(f"Error querying users info: {query_exc}", file=sys.stderr)
 
     print("LOGIN FUNCTION ENTERED", file=sys.stderr)
     print("[LOGIN] Step 1: Request received", file=sys.stderr)

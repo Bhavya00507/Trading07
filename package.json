@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && cd backend && python -m PyInstaller --clean -y main.spec && cd .. && electron-builder build --win",
+    "electron:build": "npm run build && electron-builder build --win",
     "android:build": "npm run build && cd android && gradlew assembleRelease",
     "android:debug": "npm run build && cd android && gradlew assembleDebug",
     "android:bundle": "npm run build && cd android && gradlew bundleRelease"
@@ -62,12 +62,6 @@
       "main.js",
       "splash.html",
       "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "backend/dist/backend",
-        "to": "backend"
-      }
     ],
     "win": {
       "target": [

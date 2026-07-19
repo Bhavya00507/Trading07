@@ -11,6 +11,7 @@ from app.models.position import Position
 from app.models.order import Order
 from app.models.trade_history import TradeHistory
 from app.websocket.manager import manager
+from app.api.sync import AccountResponse
 
 router = APIRouter(prefix="/paper", tags=["paper"])
 

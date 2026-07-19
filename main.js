@@ -15,7 +15,7 @@ const isDev = !app.isPackaged;
 
 if (!isDev) {
   process.env.NODE_ENV = 'production';
-  process.env.VITE_API_URL = 'http://127.0.0.1:8000';
+  process.env.VITE_API_URL = process.env.VITE_API_URL || 'https://api.myserver.com';
 }
 
 // Single instance lock protection
@@ -307,25 +307,8 @@ function setupMenu() {
 
 // App Ready Startup flow
 app.on('ready', async () => {
-  createSplashWindow();
-  try {
-    await startBackend();
-    await waitForBackend();
-    createMainWindow();
-  } catch (err) {
-    log.error(`Startup sequence failed: ${err.message}`);
-    const detailMsg = backendStartupLogs 
-      ? `Backend output:\n${backendStartupLogs}` 
-      : err.message;
-    dialog.showErrorBox(
-      'Backend Initialization Error',
-      `${err.message}\n\n${detailMsg}`
-    );
-    if (backendProcess) {
-      backendProcess.kill();
-    }
-    app.quit();
-  }
+  // Boot directly to the main window
+  createMainWindow();
 });
 
 app.on('window-all-closed', () => {
@@ -336,10 +319,6 @@ app.on('window-all-closed', () => {
 
 app.on('quit', () => {
   log.info('App quitting...');
-  if (backendProcess) {
-    log.info('Killing backend process...');
-    backendProcess.kill();
-  }
 });
 
 process.on('uncaughtException', (error) => {

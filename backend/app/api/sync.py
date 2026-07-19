@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-import sys, traceback
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+import sys, traceback, time
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database.session import get_db
-from app.models.order import Order, OrderStatus
+from app.models.order import Order, OrderStatus, OrderSide, OrderType
 from app.models.position import Position
 from app.models.account import Account
 from app.models.trade_history import TradeHistory
@@ -11,7 +11,7 @@ from app.services.market_data import _latest_prices
 from uuid import UUID
 from pydantic import BaseModel
 from typing import List
-from app.api.orders import OrderResponse
+from app.api.orders import OrderResponse, OrderCreate
 from app.api.positions import PositionResponse
 from app.api.history import TradeHistoryResponse
 import uuid
@@ -141,3 +141,151 @@ async def sync_state(account_type: str = "live", db: AsyncSession = Depends(get_
         print("SYNC STEP ERROR: Exception caught!", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         raise exc
+
+@router.get("/portfolio", response_model=List[PositionResponse])
+async def get_portfolio(db: AsyncSession = Depends(get_db), user_id: UUID = Depends(get_current_user_id)):
+    stmt = select(Position).where(Position.user_id == user_id, Position.quantity != 0.0)
+    res = await db.execute(stmt)
+    return list(res.scalars().all())
+
+@router.get("/accounts", response_model=List[AccountResponse])
+async def get_accounts(db: AsyncSession = Depends(get_db), user_id: UUID = Depends(get_current_user_id)):
+    stmt = select(Account).where(Account.user_id == user_id)
+    res = await db.execute(stmt)
+    return list(res.scalars().all())
+
+class SimpleOrderCreate(BaseModel):
+    symbol: str
+    quantity: float
+    price: float | None = None
+    stop_loss: float | None = None
+    take_profit: float | None = None
+    account_type: str = "paper"
+
+@router.post("/buy", response_model=OrderResponse)
+async def post_buy(
+    request: Request,
+    order: SimpleOrderCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+    background_tasks: BackgroundTasks = None
+):
+    from app.services.order_engine import process_new_order
+    full_order = OrderCreate(
+        symbol=order.symbol,
+        side=OrderSide.BUY,
+        type=OrderType.MARKET if order.price is None else OrderType.LIMIT,
+        quantity=order.quantity,
+        price=order.price,
+        stop_loss=order.stop_loss,
+        take_profit=order.take_profit,
+        account_type=order.account_type
+    )
+    start_time = getattr(request.state, "start_time", None) or time.time()
+    created = await process_new_order(db, full_order, user_id, start_time, background_tasks)
+    return created
+
+@router.post("/sell", response_model=OrderResponse)
+async def post_sell(
+    request: Request,
+    order: SimpleOrderCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+    background_tasks: BackgroundTasks = None
+):
+    from app.services.order_engine import process_new_order
+    full_order = OrderCreate(
+        symbol=order.symbol,
+        side=OrderSide.SELL,
+        type=OrderType.MARKET if order.price is None else OrderType.LIMIT,
+        quantity=order.quantity,
+        price=order.price,
+        stop_loss=order.stop_loss,
+        take_profit=order.take_profit,
+        account_type=order.account_type
+    )
+    start_time = getattr(request.state, "start_time", None) or time.time()
+    created = await process_new_order(db, full_order, user_id, start_time, background_tasks)
+    return created
+
+from fastapi import Query
+from typing import Optional
+from app.services.market_data import get_candles_async
+from app.api.market import CandleResponse
+
+@router.get("/watchlist", response_model=List[str])
+async def get_watchlist(user_id: UUID = Depends(get_current_user_id)):
+    return ["BTCUSDT", "ETHUSDT", "EURUSD", "GBPUSD", "USDJPY", "US30", "NAS100", "SPX500", "GER40", "XAUUSD", "XAGUSD"]
+
+@router.get("/candles", response_model=List[CandleResponse])
+async def get_candles_route(
+    symbol: str = Query(..., description="The symbol name, e.g. BTCUSDT"),
+    timeframe: str = Query("1m", description="The timeframe, e.g. 1m"),
+    limit: int = Query(1000, description="Number of candles to load"),
+    before: Optional[int] = Query(None, description="Load candles before this timestamp (ms)"),
+    after: Optional[int] = Query(None, description="Load candles after this timestamp (ms)")
+):
+    candles = await get_candles_async(symbol, timeframe, limit, before, after)
+    resp = []
+    for c in candles:
+        ts = c.get("timestamp")
+        t_sec = int(ts // 1000) if ts > 30000000000 else int(ts)
+        resp.append(CandleResponse(
+            time=t_sec,
+            open=c.get("open"),
+            high=c.get("high"),
+            low=c.get("low"),
+            close=c.get("close"),
+            volume=c.get("volume", 0.0)
+        ))
+    resp.sort(key=lambda x: x.time)
+    
+    unique_resp = []
+    seen_times = set()
+    for c in resp:
+        if c.time not in seen_times:
+            seen_times.add(c.time)
+            unique_resp.append(c)
+    return unique_resp
+
+@router.get("/account", response_model=AccountResponse)
+async def get_active_account(
+    account_type: str = "paper",
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id)
+):
+    stmt = select(Account).where(Account.user_id == user_id, Account.account_type == account_type)
+    res = await db.execute(stmt)
+    account = res.scalar_one_or_none()
+    if not account:
+        account = Account(
+            id=uuid.uuid4(),
+            user_id=user_id,
+            balance=10000.0,
+            equity=10000.0,
+            peak_balance=10000.0,
+            margin_used=0.0,
+            free_margin=10000.0,
+            daily_pnl=0.0,
+            drawdown=0.0,
+            account_type=account_type
+        )
+        db.add(account)
+        await db.commit()
+        await db.refresh(account)
+    return account
+
+@router.get("/paper/account", response_model=AccountResponse)
+async def get_paper_account(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id)
+):
+    return await get_active_account(account_type="paper", db=db, user_id=user_id)
+
+@router.get("/live/account", response_model=AccountResponse)
+async def get_live_account(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id)
+):
+    return await get_active_account(account_type="live", db=db, user_id=user_id)
+

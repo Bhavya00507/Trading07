@@ -16,7 +16,7 @@ if __name__ == "__main__":
     
     print("Initializing database...")
     try:
-        asyncio.run(run_auto_migrations())
+        run_auto_migrations()
         asyncio.run(seed_demo_account())
         print("Database initialization complete.")
     except Exception as e:

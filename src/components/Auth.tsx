@@ -3,6 +3,51 @@ import { useAppStore } from '../store/appStore';
 import { getApiUrl } from '../services/config';
 import './Auth.css';
 
+const getErrorMessage = (err: any): string => {
+  if (!err) return 'An unknown error occurred.';
+  if (typeof err === 'string') return err;
+  
+  let msg = '';
+  
+  // 1. If it has a detail property (common in FastAPI validation or exceptions)
+  if (err.detail) {
+    if (typeof err.detail === 'string') return err.detail;
+    if (Array.isArray(err.detail)) {
+      return err.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');
+    }
+    if (typeof err.detail === 'object') {
+      return getErrorMessage(err.detail);
+    }
+  }
+
+  // 2. Standard message property
+  if (err.message && typeof err.message === 'string') {
+    msg = err.message;
+  } else if (err.message && typeof err.message === 'object') {
+    msg = getErrorMessage(err.message);
+  } else if (err.error && typeof err.error === 'string') {
+    msg = err.error;
+  }
+  
+  if (msg && msg !== '[object Object]') {
+    return msg;
+  }
+  
+  // 3. Try to stringify
+  try {
+    const stringified = JSON.stringify(err);
+    if (stringified && stringified !== '{}') return stringified;
+  } catch (e) {
+    // Ignore stringify error
+  }
+  
+  // 4. Fallback to String conversion
+  const str = String(err);
+  if (str && str !== '[object Object]') return str;
+  
+  return 'An error occurred. Please try again.';
+};
+
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -23,10 +68,25 @@ const Auth: React.FC = () => {
       const api = getApiUrl();
       if (isLogin) {
         let res;
+        const requestHeaders = { 'Content-Type': 'application/json' };
+        console.log("LOGIN REQUEST:", {
+          method: 'POST',
+          url: `${api}/auth/login`,
+          headers: requestHeaders,
+          contentType: 'application/json',
+          body: JSON.stringify({ username, password }),
+          cookies: document.cookie,
+          authorization: 'none',
+          origin: window.location.origin,
+          referer: document.referrer,
+          userAgent: navigator.userAgent
+        });
+        console.log("LOGIN PAYLOAD", { username, password });
+
         try {
             res = await fetch(`${api}/auth/login`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: requestHeaders,
               body: JSON.stringify({ username, password }),
             });
         } catch (err) {
@@ -35,31 +95,45 @@ const Auth: React.FC = () => {
         }
 
         console.log("STATUS:", res.status);
-        console.log("OK:", res.ok);
+        console.log("STATUSTEXT:", res.statusText);
+        const responseHeaders: Record<string, string> = {};
+        res.headers.forEach((val, key) => {
+          responseHeaders[key] = val;
+        });
+        console.log("RESPONSE HEADERS:", JSON.stringify(responseHeaders));
+
+        let text = "";
         try {
-            console.log("BODY:", await res.clone().text());
+            text = await res.text();
+            console.log("RAW RESPONSE:", text);
         } catch (err) {
-            console.error("Clone login body read failed", err);
+            console.error("Failed to read raw response text:", err);
+            throw err;
+        }
+
+        let data: any = {};
+        try {
+            data = JSON.parse(text);
+            console.log("Login data parsed:", data);
+        } catch (err) {
+            console.error("JSON parse failed for response:", text, err);
+            throw err;
         }
 
         if (!res.ok) {
           let errText = "Login failed";
-          try {
-              const detail = await res.json();
-              errText = detail.detail || 'Login failed';
-          } catch (err) {
-              console.error("Failed to parse login error json", err);
+          if (data && data.detail) {
+            if (typeof data.detail === 'string') {
+              errText = data.detail;
+            } else if (Array.isArray(data.detail)) {
+              errText = data.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');
+            } else if (typeof data.detail === 'object') {
+              errText = data.detail.message || JSON.stringify(data.detail);
+            }
+          } else if (data && data.error) {
+            errText = data.error;
           }
           throw new Error(errText);
-        }
-
-        let data;
-        try {
-            data = await res.json();
-            console.log("Login data parsed:", data);
-        } catch (err) {
-            console.error("JSON parse failed", err);
-            throw err;
         }
 
         try {
@@ -101,7 +175,17 @@ const Auth: React.FC = () => {
             try {
                 const rawBody = await response.text();
                 const body = JSON.parse(rawBody);
-                errText = body.detail || body.error || "Registration failed";
+                if (body.detail) {
+                  if (typeof body.detail === 'string') {
+                    errText = body.detail;
+                  } else if (Array.isArray(body.detail)) {
+                    errText = body.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');
+                  } else if (typeof body.detail === 'object') {
+                    errText = body.detail.message || JSON.stringify(body.detail);
+                  }
+                } else {
+                  errText = body.error || "Registration failed";
+                }
             } catch (err) {
                 console.error("Failed to parse register error json", err);
             }
@@ -125,7 +209,9 @@ const Auth: React.FC = () => {
         return;
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
+      console.error("OUTER CATCH HANDLES ERROR:", err);
+      const msg = getErrorMessage(err);
+      setError(msg);
     } finally {
       setLoading(false);
     }
