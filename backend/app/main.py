@@ -60,6 +60,27 @@ from app.services.market_data import start_market_feed
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:4173",
+    "http://192.168.*",
+    "https://trading07.onrender.com",
+    "https://*.onrender.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_origin_regex="https://.*\\.onrender\\.com",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/ping")
 async def ping_endpoint():
     return {"status": "ok"}
@@ -200,12 +221,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 # app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORSMiddleware configured above
 
 # Include routers
 app.include_router(health_router)

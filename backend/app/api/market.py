@@ -69,8 +69,15 @@ def list_instruments():
         cat = inst["category"].lower()
         if cat in categories:
             categories[cat].append(detail)
-            
     return categories
+
+@router.get("", response_model=InstrumentsResponse)
+def get_market_root():
+    return list_instruments()
+
+@router.get("/", response_model=InstrumentsResponse)
+def get_market_root_slash():
+    return list_instruments()
 
 @router.get("/candles", response_model=List[CandleResponse])
 async def get_historical_candles(
