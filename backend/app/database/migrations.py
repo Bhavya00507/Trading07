@@ -58,39 +58,13 @@ def run_auto_migrations():
     from alembic import command
     import os
 
-    # Resolve base_dir based on whether we are executing on Android (pointing to extracted assets) or locally
-    if os.environ.get("ANDROID_BOOT"):
-        base_dir = Path(os.environ["ANDROID_DATA_DIR"])
-        print(f"Android Boot Log: Using Android asset location for Alembic base_dir: {base_dir}")
-    else:
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        print(f"Android Boot Log: Using default Python path for Alembic base_dir: {base_dir}")
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    print(f"Auto Migrations: Using base_dir: {base_dir}")
 
     ini_path = base_dir / "alembic.ini"
     alembic_cfg = Config(str(ini_path))
     alembic_cfg.set_main_option("script_location", str(base_dir / "alembic"))
     alembic_cfg.set_main_option("sqlalchemy.url", sync_url)
-
-    # Verbose logging before running migrations
-    cwd = os.getcwd()
-    script_loc = alembic_cfg.get_main_option("script_location")
-    env_path = Path(script_loc) / "env.py"
-    versions_dir = Path(script_loc) / "versions"
-
-    print(f"Android Boot Log: Current Working Directory: {cwd}")
-    print(f"Android Boot Log: Alembic script_location: {script_loc}")
-    print(f"Android Boot Log: env.py exists physically: {env_path.exists()} (Path: {env_path})")
-    print(f"Android Boot Log: versions directory exists physically: {versions_dir.exists()} (Path: {versions_dir})")
-
-    if not env_path.exists():
-        print(f"Android Boot Log: env.py is missing! Printing directory tree of base_dir ({base_dir}):")
-        try:
-            for root, dirs, files in os.walk(str(base_dir)):
-                print(f"  Dir: {root}")
-                for f in files:
-                    print(f"    File: {f}")
-        except Exception as walk_err:
-            print(f"Error printing directory tree: {walk_err}")
 
     has_users = check_table_exists("users")
     has_version = check_alembic_has_version()

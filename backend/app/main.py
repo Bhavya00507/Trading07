@@ -436,21 +436,11 @@ def _get_repo_root() -> Path:
         return Path(__file__).resolve().parent.parent.parent
 
 def _get_dist_dir() -> Path | None:
-    if os.environ.get("ANDROID_BOOT"):
-        p = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files")) / "dist"
-        return p if p.exists() else None
-    # Desktop / dev: look for the built dist next to the repo root
+    # Look for the built dist next to the repo root
     p = _get_repo_root() / "dist"
     return p if p.exists() else None
 
 def _auto_build_frontend():
-    if os.environ.get("ANDROID_BOOT"):
-        # On Android WebView we skip NPM build checks
-        dist_dir = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files")) / "dist"
-        if not dist_dir.exists() or not (dist_dir / "index.html").exists():
-            raise RuntimeError("Frontend dist folder is missing on Android. Please extract assets correctly.")
-        return
-
     frontend_root = _get_repo_root()
     dist_dir = frontend_root / "dist"
     

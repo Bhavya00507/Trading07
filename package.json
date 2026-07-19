@@ -11,10 +11,7 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "electron:dev": "electron .",
-    "electron:build": "npm run build && electron-builder build --win",
-    "android:build": "npm run build && cd android && gradlew assembleRelease",
-    "android:debug": "npm run build && cd android && gradlew assembleDebug",
-    "android:bundle": "npm run build && cd android && gradlew bundleRelease"
+    "electron:build": "npm run build && electron-builder build --win"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

@@ -10,23 +10,16 @@ console.log("FRONTEND COMPILE TIME:", __BUILD_TIME__);
 // @ts-ignore
 window.__APP_VERSION__ = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '1.0.0-dev';
 
-// Auto-cleanup stale service workers and caches from other localhost projects
+// Register PWA Service Worker
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (const registration of registrations) {
-      registration.unregister().then(() => {
-        console.log('[SW] Stale Service Worker unregistered');
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => {
+        console.log('[SW] Service Worker registered successfully with scope:', reg.scope);
+      })
+      .catch((err) => {
+        console.error('[SW] Service Worker registration failed:', err);
       });
-    }
-  });
-}
-if ('caches' in window) {
-  caches.keys().then((keys) => {
-    keys.forEach((key) => {
-      caches.delete(key).then(() => {
-        console.log('[Cache] Stale cache cleared:', key);
-      });
-    });
   });
 }
 

@@ -20,20 +20,14 @@ import sys
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    if os.environ.get("ANDROID_BOOT"):
-        # Android production mode - Store database in internal files directory
-        android_data_dir = Path(os.environ.get("ANDROID_DATA_DIR", "/data/data/com.trading.platform/files"))
-        android_data_dir.mkdir(parents=True, exist_ok=True)
-        db_path = android_data_dir / "test.db"
+    # Host PC mode: Force both dev and frozen desktop app backend to use the exact same test.db
+    # If the workspace D:/Trading07/backend exists, use it. Otherwise, use relative path.
+    workspace_db = Path("D:/Trading07/backend/test.db")
+    if workspace_db.parent.exists():
+        db_path = workspace_db
     else:
-        # Host PC mode: Force both dev and frozen desktop app backend to use the exact same test.db
-        # If the workspace D:/Trading07/backend exists, use it. Otherwise, use relative path.
-        workspace_db = Path("D:/Trading07/backend/test.db")
-        if workspace_db.parent.exists():
-            db_path = workspace_db
-        else:
-            # Fallback to the absolute path of test.db in backend folder
-            db_path = (Path(__file__).resolve().parent.parent.parent / "test.db")
+        # Fallback to the absolute path of test.db in backend folder
+        db_path = (Path(__file__).resolve().parent.parent.parent / "test.db")
     DATABASE_URL = f"sqlite+aiosqlite:///{db_path.as_posix()}"
 
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-production-trading-core-key-2026")
