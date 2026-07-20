@@ -9,6 +9,8 @@ export default defineConfig({
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -30,8 +32,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: '0.0.0.0',
     hmr: {
-      overlay: false,   // disable Vite's error overlay — we use our own ErrorBoundary
+      overlay: false,
     },
   },
 });
