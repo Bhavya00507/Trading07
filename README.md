@@ -1,6 +1,6 @@
-# Trading Terminal
+# Trading Terminal — Production Platform
 
-Professional production-grade real-time trading platform featuring a Windows Desktop Application (built with Electron) and a fully responsive installable Progressive Web App (PWA) React website, sharing a single centralized FastAPI backend powered by a PostgreSQL database.
+A commercial-grade real-time multi-asset trading platform featuring a Windows Desktop Application (built with Electron) and a fully responsive Progressive Web App (PWA) React website, powered by a single centralized FastAPI + PostgreSQL backend.
 
 ```
                       Internet
@@ -16,45 +16,41 @@ Professional production-grade real-time trading platform featuring a Windows Des
   (Mobile + Tablet + PC)             (Windows App)
 ```
 
-## 🚀 Key Features
+---
 
-*   **Centralized PostgreSQL Database**: Shared state across web, mobile browser, and desktop clients for positions, orders, account history, watchlists, and balances.
-*   **Fully Responsive Web Shell**: Touch-friendly terminal interface matching standard trading platform design systems (glowing status elements, clean grids, list panels).
-*   **Immersive PWA (Progressive Web App)**: Service-worker caching for assets, local offline capability wrapper, and support for "Add to Home Screen" installation on iPhone and Android.
-*   **Windows Desktop App**: Packaged via Electron, interfacing directly with the secure production API server.
+## 📚 Commercial Documentation Suite
 
-## 🛠️ Project Directory Structure
+| Document | Description |
+| :--- | :--- |
+| 📖 **[INSTALL.md](file:///d:/Trading07/INSTALL.md)** | Step-by-step developer setup for Local, Docker, and Electron desktop builds |
+| 🚀 **[DEPLOYMENT.md](file:///d:/Trading07/DEPLOYMENT.md)** | Production deployment guide for Vercel, Railway, Render, and PostgreSQL |
+| 📡 **[API.md](file:///d:/Trading07/API.md)** | Complete REST API route specifications and WebSocket feed protocol details |
+| 📝 **[CHANGELOG.md](file:///d:/Trading07/CHANGELOG.md)** | Release history and architectural milestone log |
 
-```
-├── backend/                  # FastAPI web server, database migrations (Alembic), and models
-│   ├── app/                  # Main server application codebase
-│   └── alembic/              # Database schema migrations versions
-├── src/                      # React frontend codebase
-│   ├── components/           # Terminal UI widgets (Charts, Watchlists, Position blocks)
-│   ├── services/             # WebSocket connections and REST API endpoints
-│   └── store/                # Zustand global client states (Account, Orders, Market feeds)
-├── public/                   # Static PWA icon, manifest, and service worker shell
-├── main.js                   # Electron main application thread
-├── package.json              # Client dependencies and Electron compilation definitions
-└── vite.config.ts            # Vite asset compilation pipelines
-```
+---
 
-## ⚙️ Quick Start
+## ⚡ Feature Matrix
 
-### 1. Start the Central Backend
+*   **Multi-Asset Execution**: Trade Crypto, Forex, Indices, and Metals with real-time market data streaming.
+*   **Order Engine**: Support for Market, Limit, Stop, Stop-Limit, TWAP, Iceberg, and Trailing Stop execution logic with netting and position reverse capabilities.
+*   **Centralized State**: Multi-account management (Paper, Live, Binance, Bybit, MT5, Demo) synchronized across web browsers, mobile viewports, and desktop windows.
+*   **Ultra-Responsive PWA**: Offline shell support, asset caching, service worker guards, and native Add-to-Home-Screen app capabilities.
+*   **Security & JWT Auth**: Salted password hashing, JWT access & refresh tokens, automatic token renewal, and CORS middleware controls.
+
+---
+
+## 🛠️ Quick Start
+
 ```bash
+# 1. Install & start backend (FastAPI)
 cd backend
-python -m pip install -r requirements.txt
-python main.py
-```
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-### 2. Start the Frontend (Vite)
-```bash
+# 2. Install & start web client (Vite React)
 npm install
 npm run dev
-```
 
-### 3. Start the Desktop App (Electron)
-```bash
+# 3. Start Desktop Application (Electron)
 npm run electron:dev
 ```
