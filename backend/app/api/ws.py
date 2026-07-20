@@ -1,7 +1,7 @@
 import json
 import asyncio
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
 from app.websocket.manager import manager
@@ -33,7 +33,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None)):
                 if msg.get("type") == "ping":
                     pong_msg = {
                         "type": "pong",
-                        "timestamp": int(datetime.utcnow().timestamp() * 1000)
+                        "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000)
                     }
                     if "event_id" in msg:
                         pong_msg["event_id"] = msg["event_id"]
@@ -64,7 +64,7 @@ async def websocket_market_endpoint(websocket: WebSocket, token: str = Query(Non
                 if msg.get("type") == "ping":
                     pong_msg = {
                         "type": "pong",
-                        "timestamp": int(datetime.utcnow().timestamp() * 1000)
+                        "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000)
                     }
                     if "event_id" in msg:
                         pong_msg["event_id"] = msg["event_id"]

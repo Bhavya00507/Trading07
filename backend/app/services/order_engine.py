@@ -1,6 +1,6 @@
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.order import Order, OrderStatus, OrderSide, OrderType
@@ -105,7 +105,7 @@ async def recalculate_user_metrics(db: AsyncSession, user_id: uuid.UUID, account
                 candidate_sl = curr_price - pos.trailing_stop
                 if pos.stop_loss is None or candidate_sl > pos.stop_loss:
                     pos.stop_loss = candidate_sl
-                    pos.updated_at = datetime.utcnow()
+                    pos.updated_at = datetime.now(timezone.utc)
                     db.add(pos)
                     # Broadcast position_update for trailing stop adjustment
                     from app.api.positions import PositionResponse
@@ -115,7 +115,7 @@ async def recalculate_user_metrics(db: AsyncSession, user_id: uuid.UUID, account
                 candidate_sl = curr_price + pos.trailing_stop
                 if pos.stop_loss is None or candidate_sl < pos.stop_loss:
                     pos.stop_loss = candidate_sl
-                    pos.updated_at = datetime.utcnow()
+                    pos.updated_at = datetime.now(timezone.utc)
                     db.add(pos)
                     # Broadcast position_update for trailing stop adjustment
                     from app.api.positions import PositionResponse
@@ -347,7 +347,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
             new_avg = ((old_avg * abs(old_qty)) + (exec_price * order_qty)) / abs(new_qty)
             position.quantity = new_qty
             position.average_price = new_avg
-            position.updated_at = datetime.utcnow()
+            position.updated_at = datetime.now(timezone.utc)
             # Inherit SL/TP
             position.stop_loss = order.stop_loss
             position.take_profit = order.take_profit
@@ -361,7 +361,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
                 realized_pnl = (exec_price - old_avg) * order_qty * pnl_multiplier * contract_size
                 closed_qty = order_qty
                 position.quantity = old_qty + (order_qty * side_multiplier)
-                position.updated_at = datetime.utcnow()
+                position.updated_at = datetime.now(timezone.utc)
                 position.commission = float(position.commission or 0.0) + commission_val
             elif order_qty == abs_old_qty:
                 # Complete Close
@@ -371,7 +371,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
                 position.average_price = 0.0
                 position.stop_loss = None
                 position.take_profit = None
-                position.updated_at = datetime.utcnow()
+                position.updated_at = datetime.now(timezone.utc)
                 position.commission = float(position.commission or 0.0) + commission_val
             else:
                 # Reversal
@@ -383,7 +383,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
                 position.average_price = 0.0
                 position.stop_loss = None
                 position.take_profit = None
-                position.updated_at = datetime.utcnow()
+                position.updated_at = datetime.now(timezone.utc)
                 position.commission = float(position.commission or 0.0) + (commission_val * (abs_old_qty / order_qty))
                 
                 # Open brand new position for the excess
@@ -400,7 +400,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
                     take_profit=order.take_profit,
                     commission=excess_comm,
                     account_type=order.account_type,
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.now(timezone.utc)
                 )
                 db.add(new_pos)
     else:
@@ -417,7 +417,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
             take_profit=order.take_profit,
             commission=commission_val,
             account_type=order.account_type,
-            updated_at=datetime.utcnow(),
+            updated_at=datetime.now(timezone.utc),
         )
         db.add(position)
         
@@ -439,7 +439,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
             quantity=closed_qty,
             pnl=realized_pnl,
             account_type=order.account_type,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         db.add(trade)
         await db.flush()
@@ -500,7 +500,7 @@ async def close_position_sltp_internal(db: AsyncSession, position: Position, exi
         price=exit_price,
         status=OrderStatus.FILLED,
         account_type=position.account_type,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     db.add(close_order)
     await db.flush()
@@ -514,7 +514,7 @@ async def close_position_sltp_internal(db: AsyncSession, position: Position, exi
     position.realized_pnl = float(position.realized_pnl or 0.0) + realized_pnl
     position.commission = float(position.commission or 0.0) + close_commission
     position.unrealized_pnl = 0.0
-    position.updated_at = datetime.utcnow()
+    position.updated_at = datetime.now(timezone.utc)
     
     account.balance = float(account.balance) + realized_pnl - close_commission
     
@@ -529,7 +529,7 @@ async def close_position_sltp_internal(db: AsyncSession, position: Position, exi
         quantity=abs_qty,
         pnl=realized_pnl,
         account_type=position.account_type,
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(trade)
     await db.flush()
@@ -710,7 +710,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                     reason="MISSING_GTD_TIMESTAMP",
                     message="Good Till Date order requires a gtd_timestamp."
                 )
-            if gtd_ts < datetime.utcnow():
+            if gtd_ts < datetime.now(timezone.utc):
                 raise RiskException(
                     code="GTD_REJECTED",
                     reason="GTD_TIMESTAMP_IN_PAST",
@@ -799,7 +799,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
             take_profit=order_data.take_profit,
             status=initial_status,
             account_type=acct_type,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             is_reduce_only=getattr(order_data, "is_reduce_only", False) or False,
             is_post_only=getattr(order_data, "is_post_only", False) or False,
             time_in_force=tif,
@@ -837,7 +837,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                     new_avg = ((old_avg * abs(old_qty)) + (exec_price * order_qty)) / abs(new_qty)
                     position.quantity = new_qty
                     position.average_price = new_avg
-                    position.updated_at = datetime.utcnow()
+                    position.updated_at = datetime.now(timezone.utc)
                     position.stop_loss = new_order.stop_loss
                     position.take_profit = new_order.take_profit
                     position.commission = float(position.commission or 0.0) + commission_val
@@ -849,7 +849,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                         realized_pnl = (exec_price - old_avg) * order_qty * pnl_multiplier * contract_size
                         closed_qty = order_qty
                         position.quantity = old_qty + (order_qty * side_multiplier)
-                        position.updated_at = datetime.utcnow()
+                        position.updated_at = datetime.now(timezone.utc)
                         position.commission = float(position.commission or 0.0) + commission_val
                     elif order_qty == abs_old_qty:
                         realized_pnl = (exec_price - old_avg) * order_qty * pnl_multiplier * contract_size
@@ -858,7 +858,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                         position.average_price = 0.0
                         position.stop_loss = None
                         position.take_profit = None
-                        position.updated_at = datetime.utcnow()
+                        position.updated_at = datetime.now(timezone.utc)
                         position.commission = float(position.commission or 0.0) + commission_val
                     else:
                         # Reversal
@@ -870,7 +870,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                         position.average_price = 0.0
                         position.stop_loss = None
                         position.take_profit = None
-                        position.updated_at = datetime.utcnow()
+                        position.updated_at = datetime.now(timezone.utc)
                         position.commission = float(position.commission or 0.0) + (commission_val * (abs_old_qty / order_qty))
                         
                         # Open new position for the excess
@@ -887,7 +887,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                             take_profit=new_order.take_profit,
                             commission=excess_comm,
                             account_type=acct_type,
-                            updated_at=datetime.utcnow()
+                            updated_at=datetime.now(timezone.utc)
                         )
                         db.add(new_pos)
             else:
@@ -903,7 +903,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                     take_profit=new_order.take_profit,
                     commission=commission_val,
                     account_type=acct_type,
-                    updated_at=datetime.utcnow(),
+                    updated_at=datetime.now(timezone.utc),
                 )
                 db.add(position)
                 
@@ -924,7 +924,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
                     quantity=closed_qty,
                     pnl=realized_pnl,
                     account_type=acct_type,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.now(timezone.utc)
                 )
                 db.add(trade)
                 await db.flush()
@@ -1045,7 +1045,7 @@ async def process_market_tick(db: AsyncSession, symbol: str, price: float):
         gtd_stmt = select(Order).where(
             Order.status.in_([OrderStatus.PENDING, OrderStatus.PARTIAL]),
             Order.time_in_force == "GTD",
-            Order.gtd_timestamp <= datetime.utcnow()
+            Order.gtd_timestamp <= datetime.now(timezone.utc)
         )
         gtd_res = await db.execute(gtd_stmt)
         expired_orders = gtd_res.scalars().all()
@@ -1110,7 +1110,7 @@ async def process_market_tick(db: AsyncSession, symbol: str, price: float):
                 candidate_sl = price - pos.trailing_stop
                 if pos.stop_loss is None or candidate_sl > pos.stop_loss:
                     pos.stop_loss = candidate_sl
-                    pos.updated_at = datetime.utcnow()
+                    pos.updated_at = datetime.now(timezone.utc)
                     db.add(pos)
                     # Broadcast position_update for trailing stop adjustment
                     from app.api.positions import PositionResponse
@@ -1120,7 +1120,7 @@ async def process_market_tick(db: AsyncSession, symbol: str, price: float):
                 candidate_sl = price + pos.trailing_stop
                 if pos.stop_loss is None or candidate_sl < pos.stop_loss:
                     pos.stop_loss = candidate_sl
-                    pos.updated_at = datetime.utcnow()
+                    pos.updated_at = datetime.now(timezone.utc)
                     db.add(pos)
                     # Broadcast position_update for trailing stop adjustment
                     from app.api.positions import PositionResponse

@@ -72,10 +72,10 @@ class ConnectionManager:
     async def broadcast_event(self, event_type: str, data: dict, user_id: UUID = None, extra: dict = None):
         import uuid
         import json
-        from datetime import datetime
+        from datetime import datetime, timezone
         payload = {
             "event_id": str(uuid.uuid4()),
-            "timestamp": int(datetime.utcnow().timestamp() * 1000),
+            "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
             "type": event_type,
             "data": data
         }

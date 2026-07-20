@@ -4,7 +4,7 @@ import asyncio
 from uuid import UUID
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database.session import get_db
@@ -109,7 +109,7 @@ async def modify_sltp(req: ModifySLTPRequest, db: AsyncSession = Depends(get_db)
         
         pos.stop_loss = req.stop_loss
         pos.take_profit = req.take_profit
-        pos.updated_at = datetime.utcnow()
+        pos.updated_at = datetime.now(timezone.utc)
         
         acc_stmt = select(Account).where(Account.user_id == user_id, Account.account_type == req.account_type).with_for_update()
         acc_res = await db.execute(acc_stmt)
@@ -156,7 +156,7 @@ async def modify_trailing_stop(req: TrailingStopRequest, db: AsyncSession = Depe
             raise HTTPException(status_code=404, detail="Active position not found")
         
         pos.trailing_stop = req.distance
-        pos.updated_at = datetime.utcnow()
+        pos.updated_at = datetime.now(timezone.utc)
         
         # Initialize Stop Loss if not set
         if req.distance and req.distance > 0 and not pos.stop_loss:
@@ -289,7 +289,7 @@ async def close_symbol(req: CloseSymbolRequest, db: AsyncSession = Depends(get_d
                 price=exit_price,
                 status=OrderStatus.FILLED,
                 account_type=pos.account_type,
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
             )
             db.add(close_order)
             await db.flush()
@@ -298,7 +298,7 @@ async def close_symbol(req: CloseSymbolRequest, db: AsyncSession = Depends(get_d
             pos.quantity = pos.quantity - (close_qty if pos.quantity > 0 else -close_qty)
             pos.realized_pnl = float(pos.realized_pnl or 0.0) + realized_pnl
             pos.commission = float(pos.commission or 0.0) + close_commission
-            pos.updated_at = datetime.utcnow()
+            pos.updated_at = datetime.now(timezone.utc)
             
             account.balance = float(account.balance) + realized_pnl - close_commission
             
@@ -316,7 +316,7 @@ async def close_symbol(req: CloseSymbolRequest, db: AsyncSession = Depends(get_d
                 quantity=close_qty,
                 pnl=realized_pnl,
                 account_type=pos.account_type,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
             db.add(trade)
             await db.flush()
@@ -430,7 +430,7 @@ async def set_break_even(req: BreakEvenRequest, db: AsyncSession = Depends(get_d
             raise HTTPException(status_code=404, detail="Active position not found")
         
         pos.stop_loss = pos.average_price
-        pos.updated_at = datetime.utcnow()
+        pos.updated_at = datetime.now(timezone.utc)
         
         acc_stmt = select(Account).where(Account.user_id == user_id, Account.account_type == req.account_type).with_for_update()
         acc_res = await db.execute(acc_stmt)

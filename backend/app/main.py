@@ -63,10 +63,68 @@ from app.api.workspaces import router as workspaces_router
 from app.api.playbooks import router as playbooks_router
 from app.api.paper import router as paper_router
 
-# Services
-from app.services.market_data import start_market_feed
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Launch market data feed
+    asyncio.create_task(start_market_feed())
+    
+    print("\n=== REGISTERED ROUTES ===")
+    try:
+        schema = app.openapi()
+        for path, methods_dict in schema.get("paths", {}).items():
+            methods = ", ".join(methods_dict.keys()).upper()
+            print(f"HTTP  {path} [{methods}]")
+    except Exception as e:
+        print(f"Error printing HTTP routes: {e}")
+    print("WS    /ws")
+    print("WS    /ws/market")
+    print("=========================\n")
+
+    print("\n=== MIDDLEWARES ===")
+    try:
+        for idx, mw in enumerate(app.user_middleware):
+            options = getattr(mw, 'options', getattr(mw, 'kwargs', {}))
+            print(f"Middleware {idx}: {mw.cls.__name__} (options: {options})")
+    except Exception as e:
+        print(f"Error listing middlewares: {e}")
+    print("===================\n")
+    
+    print("\n=== EXCEPTION HANDLERS ===")
+    try:
+        for exc_type, handler in app.exception_handlers.items():
+            handler_name = getattr(handler, "__name__", str(handler))
+            print(f"Exception: {exc_type} -> Handler: {handler_name}")
+    except Exception as e:
+        print(f"Error listing exception handlers: {e}")
+    print("==========================\n")
+    
+    print("\n=== STARTUP DATABASE INFO ===")
+    try:
+        import os
+        from app.core.config import DATABASE_URL
+        from app.database.session import engine
+        print(f"DATABASE_URL from config: {DATABASE_URL}")
+        print(f"Engine URL: {engine.url}")
+        print(f"Current Working Directory: {os.getcwd()}")
+        
+        db_path = str(engine.url).replace("sqlite+aiosqlite:///", "")
+        if os.path.exists(db_path):
+            print(f"\nDATABASE:")
+            print(f"Path: {os.path.abspath(db_path)}")
+            print(f"Exists: True")
+            print(f"Size: {os.path.getsize(db_path)} bytes")
+        else:
+            print(f"Database file NOT found at: {db_path}")
+    except Exception as e:
+        print(f"Error getting DB info: {e}")
+    print("=============================\n")
+
+    print("\nBackend running\n")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -322,94 +380,7 @@ async def seed_demo_account():
             await db.commit()
             print("Sample positions seeded.")
 
-@app.on_event("startup")
-async def startup_event():
-    # Launch market data feed
-    asyncio.create_task(start_market_feed())
-    
-    print("\n=== REGISTERED ROUTES ===")
-    try:
-        # Generate OpenAPI schema to resolve and print all HTTP routes
-        schema = app.openapi()
-        for path, methods_dict in schema.get("paths", {}).items():
-            methods = ", ".join(methods_dict.keys()).upper()
-            print(f"HTTP  {path} [{methods}]")
-    except Exception as e:
-        print(f"Error printing HTTP routes: {e}")
-    # Print websocket routes
-    print("WS    /ws")
-    print("WS    /ws/market")
-    print("=========================\n")
 
-    print("\n=== MIDDLEWARES ===")
-    try:
-        for idx, mw in enumerate(app.user_middleware):
-            print(f"Middleware {idx}: {mw.cls.__name__} (options: {mw.options})")
-    except Exception as e:
-        print(f"Error listing middlewares: {e}")
-    print("===================\n")
-    
-    print("\n=== EXCEPTION HANDLERS ===")
-    try:
-        for exc_type, handler in app.exception_handlers.items():
-            handler_name = getattr(handler, "__name__", str(handler))
-            print(f"Exception: {exc_type} -> Handler: {handler_name}")
-    except Exception as e:
-        print(f"Error listing exception handlers: {e}")
-    print("==========================\n")
-    
-    print("\n=== STARTUP DATABASE INFO ===")
-    try:
-        import os
-        from app.core.config import DATABASE_URL
-        from app.database.session import engine, AsyncSessionLocal
-        from app.models.user import User
-        from sqlalchemy import func
-        print(f"DATABASE_URL from config: {DATABASE_URL}")
-        print(f"Engine URL: {engine.url}")
-        print(f"Current Working Directory: {os.getcwd()}")
-        
-        users_count = 0
-        if "postgresql" in DATABASE_URL:
-            try:
-                async with AsyncSessionLocal() as session:
-                    res = await session.execute(select(func.count(User.id)))
-                    users_count = res.scalar() or 0
-            except Exception as ex:
-                print(f"Error querying users count: {ex}")
-            print("\nDATABASE:")
-            print("Type: PostgreSQL (Production/Centralized)")
-            print(f"Users: {users_count}\n")
-        else:
-            clean_url = DATABASE_URL
-            if "///" in clean_url:
-                db_path_str = clean_url.split("///")[1]
-            else:
-                db_path_str = clean_url
-            abs_path = os.path.abspath(db_path_str)
-            exists = os.path.exists(abs_path)
-            size = os.path.getsize(abs_path) if exists else 0
-            
-            if exists:
-                try:
-                    async with AsyncSessionLocal() as session:
-                        res = await session.execute(select(func.count(User.id)))
-                        users_count = res.scalar() or 0
-                except Exception as ex:
-                    print(f"Error querying users count: {ex}")
-                    
-            print("\nDATABASE:")
-            print(f"Path: {abs_path}")
-            print(f"Exists: {exists}")
-            print(f"Size: {size} bytes")
-            print(f"Users: {users_count}\n")
-    except Exception as e:
-        print(f"Error printing startup database info: {e}")
-    print("=============================\n")
-    
-    print("\nBackend running\n")
-    print("Production URL: https://trading07-backend.onrender.com\n")
-    print("Swagger:\nhttps://trading07-backend.onrender.com/docs\n")
 
 
 # ── Static frontend serving ────────────────────────────────────────────────────
