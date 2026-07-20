@@ -37,4 +37,9 @@ export default defineConfig({
       overlay: false,
     },
   },
+  preview: {
+    port: 4173,
+    host: '0.0.0.0',
+    strictPort: true,
+  },
 });
