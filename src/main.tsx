@@ -6,24 +6,18 @@ import './index.css';
 
 console.log("FRONTEND BUILD VERSION:", new Date().toISOString());
 // @ts-ignore
-console.log("FRONTEND COMPILE TIME:", __BUILD_TIME__);
-// @ts-ignore
-window.__APP_VERSION__ = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '1.0.0-dev';
+console.log("FRONTEND COMPILE TIME:", typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'dev');
 
-// Register PWA Service Worker
+// Unregister stale service workers in localhost / dev to prevent MIME hash mismatch errors
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((reg) => {
-        console.log('[SW] Service Worker registered successfully with scope:', reg.scope);
-      })
-      .catch((err) => {
-        console.error('[SW] Service Worker registration failed:', err);
-      });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
   });
 }
 
-// Capture first runtime error before Vite's HMR loop hides it
+// Capture first runtime error
 window.addEventListener('error', (e) => {
   console.error('[FIRST RUNTIME ERROR]', e.message, '\nFile:', e.filename, '\nLine:', e.lineno, '\nStack:', e.error?.stack);
 });
@@ -34,8 +28,6 @@ window.addEventListener('unhandledrejection', (e) => {
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
-  // StrictMode intentionally double-invokes effects in dev, which can cause
-  // duplicate WebSocket connections and race conditions. Removed for stability.
   root.render(
     <ErrorBoundary>
       <App />
