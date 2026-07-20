@@ -35,6 +35,14 @@ if pydantic.__version__.startswith("1."):
             return self.json()
         BaseModel.model_dump_json = model_dump_json
 
+import sys
+from pathlib import Path
+
+# Ensure the backend directory is in sys.path when started from repo root (e.g. Render / Procfile)
+backend_dir = Path(__file__).resolve().parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
 import uvicorn
 import asyncio
 from fastapi import FastAPI
@@ -67,7 +75,8 @@ origins = [
     "http://localhost:4173",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:4173",
-    "http://192.168.*",
+    "http://192.168.1.4:4173",
+    "http://192.168.1.4:5173",
     "https://trading07.onrender.com",
     "https://*.onrender.com"
 ]
