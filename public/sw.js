@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trading-terminal-cache-v1';
+const CACHE_NAME = 'trading-terminal-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -10,10 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching shell assets');
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.error('[SW] Failed to cache initial assets:', err);
-      });
+      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
   self.skipWaiting();
@@ -23,12 +20,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            console.log('[SW] Clearing old cache:', key);
-            return caches.delete(key);
-          }
-        })
+        keys.map((key) => caches.delete(key))
       );
     })
   );
@@ -39,11 +31,12 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Bypass cache for APIs, WebSockets, and hot-reload modules
+  // Bypass cache for APIs, WebSockets, assets, and non-GET requests
   if (
     url.pathname.startsWith('/api') || 
     url.pathname.startsWith('/auth') || 
     url.pathname.startsWith('/ws') || 
+    url.pathname.startsWith('/assets') ||
     req.method !== 'GET'
   ) {
     return;
@@ -56,19 +49,10 @@ self.addEventListener('fetch', (event) => {
       }
       
       return fetch(req).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200) {
-          return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(req, responseToCache);
-        });
-
         return networkResponse;
       }).catch(() => {
-        // Fallback for navigation requests (SPA index.html shell)
-        if (req.mode === 'navigate') {
+        // Fallback ONLY for HTML page document navigation requests
+        if (req.mode === 'navigate' && req.destination === 'document') {
           return caches.match('/index.html');
         }
       });
