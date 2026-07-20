@@ -1,5 +1,6 @@
 import json
 import asyncio
+import uuid
 from datetime import datetime
 from uuid import UUID
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
@@ -8,22 +9,19 @@ from app.core.auth import decode_access_token
 
 router = APIRouter()
 
+def _resolve_user_id(token: str | None) -> UUID:
+    if token:
+        payload = decode_access_token(token)
+        if payload and "user_id" in payload:
+            try:
+                return UUID(payload["user_id"])
+            except ValueError:
+                pass
+    return uuid.uuid4()
+
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str = Query(None)):
-    if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-
-    payload = decode_access_token(token)
-    if not payload or "user_id" not in payload:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-
-    try:
-        user_id = UUID(payload["user_id"])
-    except ValueError:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
+    user_id = _resolve_user_id(token)
 
     await manager.connect(websocket, user_id)
     print(f"--> WS [user] Connected: {user_id}")
@@ -54,20 +52,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None)):
 
 @router.websocket("/ws/market")
 async def websocket_market_endpoint(websocket: WebSocket, token: str = Query(None)):
-    if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-
-    payload = decode_access_token(token)
-    if not payload or "user_id" not in payload:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-
-    try:
-        user_id = UUID(payload["user_id"])
-    except ValueError:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
+    user_id = _resolve_user_id(token)
 
     await manager.connect(websocket, user_id)
     print(f"--> WS [market] Connected: {user_id}")
