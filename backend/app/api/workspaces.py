@@ -62,3 +62,10 @@ async def save_workspace(workspace: WorkspaceBase, db: AsyncSession = Depends(ge
     await db.commit()
     await db.refresh(db_workspace)
     return db_workspace
+
+@router.get("/active", response_model=Optional[WorkspaceResponse])
+async def get_active_workspace(db: AsyncSession = Depends(get_db), user_id: UUID = Depends(get_current_user_id)):
+    """Fetch currently active user workspace layout."""
+    stmt = select(DBWorkspace).where(DBWorkspace.user_id == user_id, DBWorkspace.is_active == True)
+    res = await db.execute(stmt)
+    return res.scalar_one_or_none()
