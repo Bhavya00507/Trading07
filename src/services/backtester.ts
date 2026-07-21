@@ -35,6 +35,9 @@ export interface BacktestMetrics {
   winRate: number; // %
   profitFactor: number;
   sharpeRatio: number;
+  sortinoRatio?: number;
+  calmarRatio?: number;
+  expectancy?: number;
   maxDrawdown: number; // %
   avgRR: number;
 }
@@ -297,6 +300,19 @@ export function runBacktest(
   const stdDev = Math.sqrt(variance) || 1;
   const sharpeRatio = avgReturn / stdDev * Math.sqrt(252); // simplified annualized representation
 
+  // Sortino Ratio (downside deviation)
+  const downsideReturns = returns.filter(r => r < 0);
+  const downsideVariance = downsideReturns.reduce((a, b) => a + Math.pow(b, 2), 0) / (downsideReturns.length || 1);
+  const downsideStdDev = Math.sqrt(downsideVariance) || 0.0001;
+  const sortinoRatio = (avgReturn / downsideStdDev) * Math.sqrt(252);
+
+  // Calmar Ratio (annualized return / max drawdown)
+  const calmarRatio = maxDrawdown > 0 ? (netProfit / initialCapital) / (maxDrawdown / 100) : netProfit / initialCapital;
+
+  // Expectancy = (Win Rate * Avg Win) - (Loss Rate * Avg Loss)
+  const lossRate = totalTrades > 0 ? (losses.length / totalTrades) : 0;
+  const expectancy = ((winRate / 100) * avgWin) - (lossRate * avgLoss);
+
   // Average Risk/Reward ratio
   const avgWin = wins.length > 0 ? wins.reduce((a, b) => a + b, 0) / wins.length : 0;
   const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
@@ -313,6 +329,9 @@ export function runBacktest(
       winRate,
       profitFactor,
       sharpeRatio,
+      sortinoRatio,
+      calmarRatio,
+      expectancy,
       maxDrawdown,
       avgRR
     }
