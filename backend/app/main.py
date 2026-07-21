@@ -62,6 +62,7 @@ from app.api.alerts import router as alerts_router
 from app.api.workspaces import router as workspaces_router
 from app.api.playbooks import router as playbooks_router
 from app.api.paper import router as paper_router
+from app.api.license import router as license_router
 
 from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
@@ -306,6 +307,7 @@ app.include_router(alerts_router)
 app.include_router(workspaces_router)
 app.include_router(playbooks_router)
 app.include_router(paper_router)
+app.include_router(license_router)
 
 
 # Startup event to launch market data feed and tables

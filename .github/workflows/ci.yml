@@ -1,0 +1,48 @@
+name: Commercial Platform CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, release/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    name: Run FastAPI Pytest Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+
+    - name: Run Pytest Test Suite
+      run: |
+        cd backend
+        python -m pytest tests --doctest-modules
+
+  build-frontend:
+    name: Validate React Frontend Production Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Install NPM Dependencies
+      run: npm ci
+
+    - name: Run Production Vite Build
+      run: npm run build
