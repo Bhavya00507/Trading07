@@ -63,6 +63,7 @@ from app.api.workspaces import router as workspaces_router
 from app.api.playbooks import router as playbooks_router
 from app.api.paper import router as paper_router
 
+from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
