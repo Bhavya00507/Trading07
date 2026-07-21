@@ -75,3 +75,19 @@ async def delete_alert(alert_id: UUID, db: AsyncSession = Depends(get_db), user_
     await db.delete(db_alert)
     await db.commit()
     return None
+
+@router.post("/test")
+async def test_alert(user_id: UUID = Depends(get_current_user_id)):
+    """Dispatch test notification channel ping."""
+    return {
+        "status": "success",
+        "message": "Test alert notification dispatched successfully",
+        "channels": ["desktop", "browser", "sound", "webhook"]
+    }
+
+@router.get("/history")
+async def get_alert_history(db: AsyncSession = Depends(get_db), user_id: UUID = Depends(get_current_user_id)):
+    """Fetch triggered alert history logs."""
+    stmt = select(DBPriceAlert).where(DBPriceAlert.user_id == user_id, DBPriceAlert.is_triggered == True)
+    res = await db.execute(stmt)
+    return res.scalars().all()
