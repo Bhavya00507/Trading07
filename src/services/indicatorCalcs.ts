@@ -666,5 +666,182 @@ export function calculatePivotPoints(data: ChartDataPoint[]): PivotPointsResult[
   return result;
 }
 
+// 14. Weighted Moving Average (WMA)
+export function calculateWMA(data: ChartDataPoint[], period: number): SeriesPoint[] {
+  if (data.length < period) return [];
+  const key = `wma_${period}_${data.length}_${data[data.length - 1].time}_${data[data.length - 1].close}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const result: SeriesPoint[] = [];
+  const denom = (period * (period + 1)) / 2;
+
+  for (let i = period - 1; i < data.length; i++) {
+    let sum = 0;
+    for (let j = 0; j < period; j++) {
+      sum += data[i - period + 1 + j].close * (j + 1);
+    }
+    result.push({ time: data[i].time, value: sum / denom });
+  }
+
+  calcCache.set(key, result);
+  return result;
+}
+
+// 15. Hull Moving Average (HMA)
+export function calculateHMA(data: ChartDataPoint[], period: number): SeriesPoint[] {
+  if (data.length < period) return [];
+  const key = `hma_${period}_${data.length}_${data[data.length - 1].time}_${data[data.length - 1].close}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const halfPeriod = Math.floor(period / 2);
+  const sqrtPeriod = Math.floor(Math.sqrt(period));
+
+  const wmaHalf = calculateWMA(data, halfPeriod);
+  const wmaFull = calculateWMA(data, period);
+
+  const rawDiff: ChartDataPoint[] = [];
+  for (let i = 0; i < wmaFull.length; i++) {
+    const time = wmaFull[i].time;
+    const hPoint = wmaHalf.find(p => p.time === time);
+    if (hPoint) {
+      const val = 2 * hPoint.value - wmaFull[i].value;
+      rawDiff.push({ time, open: val, high: val, low: val, close: val, volume: 0 });
+    }
+  }
+
+  const hma = calculateWMA(rawDiff, sqrtPeriod);
+  calcCache.set(key, hma);
+  return hma;
+}
+
+// 16. Volume Weighted Moving Average (VWMA)
+export function calculateVWMA(data: ChartDataPoint[], period: number): SeriesPoint[] {
+  if (data.length < period) return [];
+  const key = `vwma_${period}_${data.length}_${data[data.length - 1].time}_${data[data.length - 1].close}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const result: SeriesPoint[] = [];
+
+  for (let i = period - 1; i < data.length; i++) {
+    let pvSum = 0;
+    let vSum = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      pvSum += data[j].close * data[j].volume;
+      vSum += data[j].volume;
+    }
+    result.push({ time: data[i].time, value: vSum === 0 ? data[i].close : pvSum / vSum });
+  }
+
+  calcCache.set(key, result);
+  return result;
+}
+
+// 17. Commodity Channel Index (CCI)
+export function calculateCCI(data: ChartDataPoint[], period = 20): SeriesPoint[] {
+  if (data.length < period) return [];
+  const key = `cci_${period}_${data.length}_${data[data.length - 1].time}_${data[data.length - 1].close}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const result: SeriesPoint[] = [];
+  const tpList = data.map(c => (c.high + c.low + c.close) / 3);
+
+  for (let i = period - 1; i < data.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      sum += tpList[j];
+    }
+    const smaTP = sum / period;
+
+    let meanDev = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      meanDev += Math.abs(tpList[j] - smaTP);
+    }
+    meanDev /= period;
+
+    const cciVal = meanDev === 0 ? 0 : (tpList[i] - smaTP) / (0.015 * meanDev);
+    result.push({ time: data[i].time, value: cciVal });
+  }
+
+  calcCache.set(key, result);
+  return result;
+}
+
+// 18. Ultimate Oscillator
+export function calculateUltimateOscillator(data: ChartDataPoint[], p1 = 7, p2 = 14, p3 = 28): SeriesPoint[] {
+  if (data.length < p3 + 1) return [];
+  const key = `ult_${p1}_${p2}_${p3}_${data.length}_${data[data.length - 1].time}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const result: SeriesPoint[] = [];
+  const bpList: number[] = [];
+  const trList: number[] = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const minLowPrevClose = Math.min(data[i].low, data[i - 1].close);
+    const maxHighPrevClose = Math.max(data[i].high, data[i - 1].close);
+    bpList.push(data[i].close - minLowPrevClose);
+    trList.push(maxHighPrevClose - minLowPrevClose);
+  }
+
+  for (let i = p3 - 1; i < bpList.length; i++) {
+    const sumBP1 = bpList.slice(i - p1 + 1, i + 1).reduce((a, b) => a + b, 0);
+    const sumTR1 = trList.slice(i - p1 + 1, i + 1).reduce((a, b) => a + b, 0) || 1;
+    const sumBP2 = bpList.slice(i - p2 + 1, i + 1).reduce((a, b) => a + b, 0);
+    const sumTR2 = trList.slice(i - p2 + 1, i + 1).reduce((a, b) => a + b, 0) || 1;
+    const sumBP3 = bpList.slice(i - p3 + 1, i + 1).reduce((a, b) => a + b, 0);
+    const sumTR3 = trList.slice(i - p3 + 1, i + 1).reduce((a, b) => a + b, 0) || 1;
+
+    const uo = 100 * ((4 * (sumBP1 / sumTR1)) + (2 * (sumBP2 / sumTR2)) + (sumBP3 / sumTR3)) / 7;
+    result.push({ time: data[i + 1].time, value: uo });
+  }
+
+  calcCache.set(key, result);
+  return result;
+}
+
+// 19. TRIX (Triple Exponential Average)
+export function calculateTRIX(data: ChartDataPoint[], period = 15): SeriesPoint[] {
+  if (data.length < period * 3 + 1) return [];
+  const key = `trix_${period}_${data.length}_${data[data.length - 1].time}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const ema1 = calculateEMA(data, period);
+  const ema1Candles = ema1.map(p => ({ time: p.time, open: p.value, high: p.value, low: p.value, close: p.value, volume: 0 }));
+  const ema2 = calculateEMA(ema1Candles, period);
+  const ema2Candles = ema2.map(p => ({ time: p.time, open: p.value, high: p.value, low: p.value, close: p.value, volume: 0 }));
+  const ema3 = calculateEMA(ema2Candles, period);
+
+  const result: SeriesPoint[] = [];
+  for (let i = 1; i < ema3.length; i++) {
+    const prev = ema3[i - 1].value || 1;
+    const roc = ((ema3[i].value - prev) / prev) * 100;
+    result.push({ time: ema3[i].time, value: roc });
+  }
+
+  calcCache.set(key, result);
+  return result;
+}
+
+// 20. Detrended Price Oscillator (DPO)
+export function calculateDPO(data: ChartDataPoint[], period = 20): SeriesPoint[] {
+  if (data.length < period) return [];
+  const key = `dpo_${period}_${data.length}_${data[data.length - 1].time}`;
+  if (calcCache.has(key)) return calcCache.get(key);
+
+  const shift = Math.floor(period / 2) + 1;
+  const sma = calculateSMA(data, period);
+  const result: SeriesPoint[] = [];
+
+  for (let i = 0; i < sma.length - shift; i++) {
+    const targetCandle = data.find(c => c.time === sma[i].time);
+    if (targetCandle) {
+      result.push({ time: targetCandle.time, value: targetCandle.close - sma[i + shift].value });
+    }
+  }
+
+  calcCache.set(key, result);
+  return result;
+}
+
 
 
