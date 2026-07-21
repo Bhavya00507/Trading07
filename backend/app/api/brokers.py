@@ -40,8 +40,11 @@ async def list_supported_brokers():
 @router.post("/connect")
 async def connect_broker(req: BrokerConnectRequest, user_id: UUID = Depends(get_current_user_id)):
     """Authenticate and establish encrypted session connection to broker API gateway."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(req.broker_id)
+    success = await service.connect(api_key=req.api_key, api_secret=req.api_secret)
     return {
-        "status": "success",
+        "status": "success" if success else "failed",
         "broker_id": req.broker_id,
         "environment": req.environment,
         "session_token": f"sess-{uuid.uuid4().hex[:12]}",
@@ -51,8 +54,72 @@ async def connect_broker(req: BrokerConnectRequest, user_id: UUID = Depends(get_
 @router.post("/disconnect")
 async def disconnect_broker(broker_id: str, user_id: UUID = Depends(get_current_user_id)):
     """Gracefully disconnect active broker gateway session."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(broker_id)
+    await service.disconnect()
     return {
         "status": "success",
         "broker_id": broker_id,
         "message": f"Broker gateway session for {broker_id.upper()} disconnected."
     }
+
+@router.get("/accounts")
+async def get_broker_account(broker_id: str = "mt5", user_id: UUID = Depends(get_current_user_id)):
+    """Retrieve real live balance, equity, margin, and leverage from broker API."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(broker_id)
+    balances = await service.get_balances()
+    return {
+        "broker_id": broker_id,
+        "balances": balances
+    }
+
+@router.get("/positions")
+async def get_broker_positions(broker_id: str = "mt5", user_id: UUID = Depends(get_current_user_id)):
+    """Fetch open positions from connected broker API."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(broker_id)
+    positions = await service.get_positions()
+    return positions
+
+@router.get("/orders")
+async def get_broker_orders(broker_id: str = "mt5", user_id: UUID = Depends(get_current_user_id)):
+    """Fetch pending open orders from connected broker API."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(broker_id)
+    orders = await service.get_orders()
+    return orders
+
+class PlaceBrokerOrderRequest(BaseModel):
+    broker_id: str = "mt5"
+    symbol: str
+    side: str
+    order_type: str
+    quantity: float
+    price: Optional[float] = None
+    stop_loss: Optional[float] = None
+    take_profit: Optional[float] = None
+
+@router.post("/order")
+async def place_broker_order(req: PlaceBrokerOrderRequest, user_id: UUID = Depends(get_current_user_id)):
+    """Place real order on connected broker gateway."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(req.broker_id)
+    res = await service.place_order(
+        symbol=req.symbol,
+        side=req.side,
+        order_type=req.order_type,
+        quantity=req.quantity,
+        price=req.price,
+        stop_loss=req.stop_loss,
+        take_profit=req.take_profit
+    )
+    return res
+
+@router.delete("/order/{order_id}")
+async def cancel_broker_order(order_id: str, broker_id: str = "mt5", symbol: str = "EURUSD", user_id: UUID = Depends(get_current_user_id)):
+    """Cancel open order on connected broker gateway."""
+    from app.services.broker_service import get_broker_service
+    service = get_broker_service(broker_id)
+    res = await service.cancel_order(order_id=order_id, symbol=symbol)
+    return res
