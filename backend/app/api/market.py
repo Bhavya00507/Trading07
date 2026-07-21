@@ -271,3 +271,31 @@ async def get_market_calendar_legacy():
         logger.exception("Failed to get economic calendar")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@router.get("/earnings")
+async def get_earnings_calendar():
+    return [
+        {"symbol": "NVDA", "company": "NVIDIA Corp", "estimate": 0.65, "actual": 0.68, "revenueEstimate": "28.5B", "revenueActual": "30.0B", "date": "2026-07-25"},
+        {"symbol": "AAPL", "company": "Apple Inc", "estimate": 1.40, "actual": 1.45, "revenueEstimate": "89.0B", "revenueActual": "90.2B", "date": "2026-07-28"}
+    ]
+
+@router.get("/dividends")
+async def get_dividend_calendar():
+    return [
+        {"symbol": "MSFT", "company": "Microsoft Corp", "exDate": "2026-08-15", "payDate": "2026-09-10", "amount": 0.75, "yieldPct": 0.85},
+        {"symbol": "JPM", "company": "JPMorgan Chase", "exDate": "2026-08-04", "payDate": "2026-08-31", "amount": 1.15, "yieldPct": 2.40}
+    ]
+
+@router.get("/corporate-actions")
+async def get_corporate_actions():
+    return [
+        {"symbol": "TSLA", "company": "Tesla Inc", "actionType": "Stock Split", "details": "3-for-1 Stock Split", "effectiveDate": "2026-08-20"},
+        {"symbol": "AMZN", "company": "Amazon.com Inc", "actionType": "Buyback", "details": "$10B Share Repurchase Program", "effectiveDate": "2026-08-01"}
+    ]
+
+@router.get("/news/search")
+async def search_market_news(query: str = Query(..., min_length=1)):
+    from app.services.news_service import news_service
+    all_news = await news_service.get_news()
+    q = query.lower()
+    return [n for n in all_news if q in n.get("title", "").lower() or q in n.get("summary", "").lower()]
+
