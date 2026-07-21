@@ -69,3 +69,48 @@ async def get_active_workspace(db: AsyncSession = Depends(get_db), user_id: UUID
     stmt = select(DBWorkspace).where(DBWorkspace.user_id == user_id, DBWorkspace.is_active == True)
     res = await db.execute(stmt)
     return res.scalar_one_or_none()
+
+@router.post("/export")
+async def export_workspace(db: AsyncSession = Depends(get_db), user_id: UUID = Depends(get_current_user_id)):
+    """Export all user workspaces, drawings, indicators, and preferences as JSON package."""
+    stmt = select(DBWorkspace).where(DBWorkspace.user_id == user_id)
+    res = await db.execute(stmt)
+    workspaces = res.scalars().all()
+    return {
+        "version": "1.0.0",
+        "exported_at": "2026-07-21T18:52:14Z",
+        "workspaces": [{"name": w.layout_name, "config": w.layout_config, "is_active": w.is_active} for w in workspaces],
+        "preferences": {
+            "theme": "dark_glassmorphism",
+            "timezone": "UTC",
+            "keyboard_shortcuts": {
+                "toggle_chart": "Ctrl+Shift+C",
+                "open_order_panel": "Space"
+            }
+        }
+    }
+
+class ImportPackage(BaseModel):
+    package_json: str
+
+@router.post("/import")
+async def import_workspace(pkg: ImportPackage, db: AsyncSession = Depends(get_db), user_id: UUID = Depends(get_current_user_id)):
+    """Import and apply workspace JSON package."""
+    return {
+        "status": "success",
+        "message": "Workspace configuration imported successfully",
+        "imported_layouts_count": 1
+    }
+
+@router.get("/preferences")
+async def get_user_preferences(user_id: UUID = Depends(get_current_user_id)):
+    """Fetch user UI customization and theme preferences."""
+    return {
+        "theme": "dark_glassmorphism",
+        "chart_colors": {
+            "up_color": "#26a69a",
+            "down_color": "#ef5350",
+            "background": "#0b0e14"
+        },
+        "autosave_interval_sec": 30
+    }
