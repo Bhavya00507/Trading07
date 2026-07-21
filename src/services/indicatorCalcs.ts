@@ -666,3 +666,5 @@ export function calculatePivotPoints(data: ChartDataPoint[]): PivotPointsResult[
   return result;
 }
 
+
+
