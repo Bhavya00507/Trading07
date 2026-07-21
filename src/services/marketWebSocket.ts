@@ -146,10 +146,6 @@ class MarketWebSocket {
   connect() {
     this.startBatchLoop();
     const token = useAppStore.getState().token;
-    if (!token) {
-      this.setStatus('disconnected');
-      return;
-    }
 
     if (this.ws) {
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
@@ -166,7 +162,7 @@ class MarketWebSocket {
     this._intentionalClose = false;
     this.setStatus('connecting');
     const currentWsUrl = getWsUrl();
-    const wsUrl = `${currentWsUrl}?token=${encodeURIComponent(token)}`;
+    const wsUrl = token ? `${currentWsUrl}?token=${encodeURIComponent(token)}` : currentWsUrl;
     try {
       this.ws = new WebSocket(wsUrl);
 
@@ -175,9 +171,11 @@ class MarketWebSocket {
           this.reconnectAttempts = 0;
           this.setStatus('connected');
 
-          useAppStore.getState().syncState().catch((err) => {
-            console.error('Failed to sync state on WebSocket open:', err);
-          });
+          if (useAppStore.getState().token) {
+            useAppStore.getState().syncState().catch((err) => {
+              console.error('Failed to sync state on WebSocket open:', err);
+            });
+          }
 
           this.startHeartbeat();
           this.subscriptions.forEach((sub) => {
