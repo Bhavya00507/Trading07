@@ -7,7 +7,7 @@ import { useAutomationStore } from './store/automationStore';
 import { placeOrder, cancelOrder, modifySLTP } from './services/api';
 import { marketWebSocket } from './services/marketWebSocket';
 import { useOrderStore } from './store/orderStore';
-import { usePositionStore } from './store/positionStore';
+import { loadBranding } from './services/brandingService';
 import './App.css';
 
 const Chart = React.lazy(() => import('./components/Chart'));
@@ -37,9 +37,8 @@ const App: React.FC = () => {
   const toasts = useAppStore((s) => s.toasts);
   const removeToast = useAppStore((s) => s.removeToast);
 
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
-
   useEffect(() => {
+    loadBranding();
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };

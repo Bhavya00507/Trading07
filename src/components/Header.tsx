@@ -3,6 +3,7 @@ import { useMarketStore } from '../store/marketStore';
 import { useAppStore } from '../store/appStore';
 import { useOrderStore } from '../store/orderStore';
 import { useLiveAccountMetrics } from '../hooks/useLiveAccountMetrics';
+import { getBranding } from '../services/brandingService';
 import './Header.css';
 
 const statusColors: Record<string, string> = {
@@ -157,10 +158,15 @@ const Header: React.FC<HeaderProps> = ({
 
   const currentAccountObj = userAccounts.find((a) => a.id === activeAccountType) || userAccounts[0];
 
+  const branding = getBranding();
+  const nameParts = (branding.appName || 'QUANTUM TERMINAL').split(' ');
+  const firstWord = nameParts[0] || 'QUANTUM';
+  const restWords = nameParts.slice(1).join(' ') || 'TERMINAL';
+
   return (
     <header className="app-header">
       <div className="header-left">
-        <h1 className="logo">TRADING<span className="gold-text">TERMINAL</span></h1>
+        <h1 className="logo">{firstWord.toUpperCase()} <span className="gold-text">{restWords.toUpperCase()}</span></h1>
       </div>
 
       {user && (

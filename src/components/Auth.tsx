@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { getApiUrl } from '../services/config';
+import { getBranding } from '../services/brandingService';
 import './Auth.css';
 
 const getErrorMessage = (err: any): string => {
@@ -217,9 +218,17 @@ const Auth: React.FC = () => {
     }
   };
 
+  const branding = getBranding();
+
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, margin: 0, color: 'var(--brand-accent, #00f0ff)', letterSpacing: '1px' }}>
+            {branding.appName.toUpperCase()}
+          </h1>
+          <p style={{ fontSize: '12px', color: '#8b949e', margin: '4px 0 0 0' }}>{branding.tagline}</p>
+        </div>
         <h2>{isLogin ? 'Login to Platform' : 'Create Account'}</h2>
         {error && (
           <div className="auth-alert error">
@@ -286,6 +295,9 @@ const Auth: React.FC = () => {
               {isLogin ? 'Sign Up' : 'Sign In'}
             </button>
           </span>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '11px', color: '#6e7681' }}>
+          {branding.copyright}
         </div>
       </div>
     </div>

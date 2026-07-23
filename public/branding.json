@@ -1,0 +1,14 @@
+{
+  "appName": "Quantum Terminal",
+  "companyName": "Quantum Capital Technologies",
+  "tagline": "Institutional Multi-Asset Trading Terminal",
+  "logoUrl": "/logo.svg",
+  "accentColor": "#00f0ff",
+  "secondaryColor": "#7000ff",
+  "backgroundColor": "#090d16",
+  "cardBgColor": "#121824",
+  "supportEmail": "support@quantumterminal.io",
+  "websiteUrl": "https://quantumterminal.io",
+  "copyright": "© 2026 Quantum Capital Technologies Inc. All Rights Reserved.",
+  "themeMode": "dark"
+}
