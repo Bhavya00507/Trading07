@@ -36,6 +36,7 @@ const App: React.FC = () => {
   const syncState = useAppStore((s) => s.syncState);
   const toasts = useAppStore((s) => s.toasts);
   const removeToast = useAppStore((s) => s.removeToast);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 
   useEffect(() => {
     loadBranding();
