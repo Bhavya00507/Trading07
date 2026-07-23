@@ -321,57 +321,59 @@ import uuid
 
 async def seed_demo_account():
     async with AsyncSessionLocal() as db:
-        # Check if the testuser exists by username
         from app.models.user import User
-        user_stmt = select(User).where(User.username == "testuser")
-        user_res = await db.execute(user_stmt)
-        user = user_res.scalar_one_or_none()
-        
-        if not user:
-            user_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
-            from app.core.auth import get_password_hash
-            user = User(
-                id=user_id,
-                username="testuser",
-                email="test@example.com",
-                hashed_password=get_password_hash("password")
-            )
-            db.add(user)
-            await db.commit()
-            print("Demo user seeded.")
-        else:
-            user_id = user.id
+        from app.core.auth import get_password_hash
+        users_to_seed = [
+            ("testuser", "test@example.com", "password", uuid.UUID("00000000-0000-0000-0000-000000000001")),
+            ("charli", "charli@example.com", "123456789", uuid.UUID("00000000-0000-0000-0000-000000000002"))
+        ]
 
-        for acct_type in ["paper", "binance", "bybit", "mt5", "live", "demo"]:
-            stmt = select(Account).where(Account.user_id == user_id, Account.account_type == acct_type)
-            res = await db.execute(stmt)
-            account = res.scalar_one_or_none()
-            if not account:
-                new_account = Account(
-                    id=uuid.uuid4(),
-                    user_id=user_id,
-                    balance=10000.0,
-                    equity=10000.0,
-                    peak_balance=10000.0,
-                    margin_used=0.0,
-                    free_margin=10000.0,
-                    daily_pnl=0.0,
-                    drawdown=0.0,
-                    account_type=acct_type
+        for username, email, pwd, uid in users_to_seed:
+            user_stmt = select(User).where(User.username == username)
+            user_res = await db.execute(user_stmt)
+            user = user_res.scalar_one_or_none()
+            
+            if not user:
+                user = User(
+                    id=uid,
+                    username=username,
+                    email=email,
+                    hashed_password=get_password_hash(pwd)
                 )
-                db.add(new_account)
-        await db.commit()
+                db.add(user)
+                await db.commit()
+                print(f"User '{username}' seeded.")
+
+            for acct_type in ["paper", "binance", "bybit", "mt5", "live", "demo"]:
+                stmt = select(Account).where(Account.user_id == uid, Account.account_type == acct_type)
+                res = await db.execute(stmt)
+                account = res.scalar_one_or_none()
+                if not account:
+                    new_account = Account(
+                        id=uuid.uuid4(),
+                        user_id=uid,
+                        balance=10000.0,
+                        equity=10000.0,
+                        peak_balance=10000.0,
+                        margin_used=0.0,
+                        free_margin=10000.0,
+                        daily_pnl=0.0,
+                        drawdown=0.0,
+                        account_type=acct_type
+                    )
+                    db.add(new_account)
+            await db.commit()
         print("Demo accounts (paper, binance, bybit, mt5, live, demo) seeded.")
 
         # Seed sample positions for the demo user if none exist
         from app.models.position import Position
-        pos_stmt = select(Position).where(Position.user_id == user_id)
+        pos_stmt = select(Position).where(Position.user_id == uid)
         pos_res = await db.execute(pos_stmt)
         if not pos_res.scalars().first():
             # Seed a sample BTCUSDT position
             sample_pos = Position(
                 id=uuid.uuid4(),
-                user_id=user_id,
+                user_id=uid,
                 symbol="BTCUSDT",
                 quantity=0.02,
                 average_price=65000.0,
