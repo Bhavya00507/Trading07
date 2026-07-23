@@ -304,51 +304,70 @@ class MT5BrokerAdapter(BrokerAdapter):
         self.password: Optional[str] = None
         self.server: Optional[str] = None
         self.path: Optional[str] = None
+        self.last_sync: Optional[str] = None
+        self.latency_ms: float = 0.0
 
     async def connect(self, api_key: Optional[str] = None, api_secret: Optional[str] = None, **kwargs) -> bool:
+        start_time = time.time()
         self.api_key = api_key
         self.api_secret = api_secret
         
-        # kwargs can pass account (login), password, server, path
         login_str = kwargs.get("account") or api_key
         password = kwargs.get("password") or api_secret
         server = kwargs.get("server", "")
         path = kwargs.get("path", "")
 
-        if login_str and str(login_str).isdigit():
-            self.account = int(login_str)
+        if not login_str:
+            raise Exception("MT5 Account Login is required.")
+        if not str(login_str).isdigit():
+            raise Exception("MT5 Account Login must be a numeric account number.")
+        if not password:
+            raise Exception("MT5 Password is required.")
+        if not server:
+            raise Exception("MT5 Server is required.")
+
+        self.account = int(login_str)
         self.password = password
         self.server = server
         self.path = path
 
         try:
             import MetaTrader5 as mt5
-            init_kwargs = {}
-            if self.path:
-                init_kwargs["path"] = self.path
-            if self.account and self.password and self.server:
-                init_kwargs["login"] = self.account
-                init_kwargs["password"] = self.password
-                init_kwargs["server"] = self.server
-
-            if not mt5.initialize(**init_kwargs):
-                err = mt5.last_error()
-                # If terminal is running locally, attempt login
-                if self.account and self.password and self.server:
-                    authorized = mt5.login(self.account, password=self.password, server=self.server)
-                    if not authorized:
-                        raise Exception(f"MT5 Login failed: {mt5.last_error()}")
-                else:
-                    raise Exception(f"MT5 Initialization failed: {err}")
-            
-            self.is_connected = True
-            return True
         except ImportError:
-            # Fallback for environments where MetaTrader5 library is not native (e.g. Linux container)
-            self.is_connected = True
-            return True
-        except Exception as e:
-            raise Exception(f"MT5 Gateway Connection Failed: {str(e)}")
+            self.is_connected = False
+            raise Exception("MT5 not installed: MetaTrader5 Python package is not available on this server.")
+
+        init_kwargs = {}
+        if self.path:
+            init_kwargs["path"] = self.path
+        if self.account and self.password and self.server:
+            init_kwargs["login"] = self.account
+            init_kwargs["password"] = self.password
+            init_kwargs["server"] = self.server
+
+        init_res = mt5.initialize(**init_kwargs)
+        if not init_res:
+            err = mt5.last_error()
+            self.is_connected = False
+            raise Exception(f"Terminal not found or MT5 not installed: {err}")
+
+        authorized = mt5.login(self.account, password=self.password, server=self.server)
+        if not authorized:
+            err = mt5.last_error()
+            mt5.shutdown()
+            self.is_connected = False
+            raise Exception(f"MT5 Login failed. Verify Account Login, Password, and Server: {err}")
+
+        acc_info = mt5.account_info()
+        if acc_info is None:
+            mt5.shutdown()
+            self.is_connected = False
+            raise Exception("Server unavailable: Failed to retrieve MT5 account info after login.")
+
+        self.is_connected = True
+        self.last_sync = datetime.utcnow().isoformat()
+        self.latency_ms = round((time.time() - start_time) * 1000, 2)
+        return True
 
     async def disconnect(self) -> bool:
         try:
@@ -360,80 +379,84 @@ class MT5BrokerAdapter(BrokerAdapter):
         return True
 
     async def get_balances(self) -> Dict[str, float]:
+        if not self.is_connected:
+            raise Exception("MT5 is disconnected. Please connect MT5 account first.")
         try:
             import MetaTrader5 as mt5
             acc_info = mt5.account_info()
-            if acc_info is not None:
-                return {
-                    "balance": float(acc_info.balance),
-                    "equity": float(acc_info.equity),
-                    "margin": float(acc_info.margin),
-                    "free_margin": float(acc_info.margin_free),
-                    "profit": float(acc_info.profit),
-                    "leverage": float(acc_info.leverage)
-                }
-        except Exception:
-            pass
-        return {
-            "balance": 50000.0,
-            "equity": 50000.0,
-            "margin": 0.0,
-            "free_margin": 50000.0,
-            "profit": 0.0,
-            "leverage": 100.0
-        }
+            if acc_info is None:
+                raise Exception("Server unavailable: MT5 account info returned null.")
+            self.last_sync = datetime.utcnow().isoformat()
+            return {
+                "balance": float(acc_info.balance),
+                "equity": float(acc_info.equity),
+                "margin": float(acc_info.margin),
+                "free_margin": float(acc_info.margin_free),
+                "profit": float(acc_info.profit),
+                "leverage": float(acc_info.leverage),
+                "account_name": str(acc_info.name),
+                "server": str(acc_info.server),
+                "currency": str(acc_info.currency),
+                "latency_ms": self.latency_ms
+            }
+        except Exception as e:
+            raise Exception(f"MT5 get_balances failed: {str(e)}")
 
     async def get_positions(self) -> List[Dict[str, Any]]:
+        if not self.is_connected:
+            return []
         try:
             import MetaTrader5 as mt5
             pos_list = mt5.positions_get()
-            if pos_list:
-                positions = []
-                for p in pos_list:
-                    side = "buy" if p.type == 0 else "sell"
-                    positions.append({
-                        "id": str(p.ticket),
-                        "ticket": p.ticket,
-                        "symbol": p.symbol,
-                        "side": side,
-                        "quantity": float(p.volume),
-                        "averagePrice": float(p.price_open),
-                        "currentPrice": float(p.price_current),
-                        "stopLoss": float(p.sl),
-                        "takeProfit": float(p.tp),
-                        "unrealizedPnl": float(p.profit),
-                        "swap": float(p.swap),
-                        "comment": p.comment
-                    })
-                return positions
-        except Exception:
-            pass
-        return []
+            if pos_list is None:
+                return []
+            positions = []
+            for p in pos_list:
+                side = "buy" if p.type == 0 else "sell"
+                positions.append({
+                    "id": str(p.ticket),
+                    "ticket": p.ticket,
+                    "symbol": p.symbol,
+                    "side": side,
+                    "quantity": float(p.volume),
+                    "averagePrice": float(p.price_open),
+                    "currentPrice": float(p.price_current),
+                    "stopLoss": float(p.sl),
+                    "takeProfit": float(p.tp),
+                    "unrealizedPnl": float(p.profit),
+                    "swap": float(p.swap),
+                    "comment": p.comment
+                })
+            return positions
+        except Exception as e:
+            raise Exception(f"MT5 get_positions failed: {str(e)}")
 
     async def get_orders(self) -> List[Dict[str, Any]]:
+        if not self.is_connected:
+            return []
         try:
             import MetaTrader5 as mt5
             ord_list = mt5.orders_get()
-            if ord_list:
-                orders = []
-                for o in ord_list:
-                    side = "buy" if o.type in (0, 2, 4) else "sell"
-                    orders.append({
-                        "id": str(o.ticket),
-                        "ticket": o.ticket,
-                        "symbol": o.symbol,
-                        "side": side,
-                        "type": str(o.type),
-                        "quantity": float(o.volume_initial),
-                        "price": float(o.price_open),
-                        "stopLoss": float(o.sl),
-                        "takeProfit": float(o.tp),
-                        "status": "PENDING"
-                    })
-                return orders
-        except Exception:
-            pass
-        return []
+            if ord_list is None:
+                return []
+            orders = []
+            for o in ord_list:
+                side = "buy" if o.type in (0, 2, 4) else "sell"
+                orders.append({
+                    "id": str(o.ticket),
+                    "ticket": o.ticket,
+                    "symbol": o.symbol,
+                    "side": side,
+                    "type": str(o.type),
+                    "quantity": float(o.volume_initial),
+                    "price": float(o.price_open),
+                    "stopLoss": float(o.sl),
+                    "takeProfit": float(o.tp),
+                    "status": "PENDING"
+                })
+            return orders
+        except Exception as e:
+            raise Exception(f"MT5 get_orders failed: {str(e)}")
 
     async def place_order(self, symbol: str, side: str, order_type: str, quantity: float,
                           price: Optional[float] = None, stop_price: Optional[float] = None,
