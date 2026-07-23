@@ -136,16 +136,17 @@ origins = [
     "http://localhost:4173",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:4173",
+    "http://192.168.1.3:4173",
+    "http://192.168.1.3:5173",
     "http://192.168.1.4:4173",
     "http://192.168.1.4:5173",
-    "https://trading07.onrender.com",
-    "https://*.onrender.com"
+    "https://trading07.onrender.com"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_origin_regex="https://.*\\.onrender\\.com",
+    allow_origins=origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -343,11 +344,14 @@ async def seed_demo_account():
                 db.add(user)
                 await db.commit()
                 print(f"User '{username}' seeded.")
+            else:
+                user.hashed_password = get_password_hash(pwd)
+                await db.commit()
 
             for acct_type in ["paper", "binance", "bybit", "mt5", "live", "demo"]:
                 stmt = select(Account).where(Account.user_id == uid, Account.account_type == acct_type)
                 res = await db.execute(stmt)
-                account = res.scalar_one_or_none()
+                account = res.scalars().first()
                 if not account:
                     new_account = Account(
                         id=uuid.uuid4(),

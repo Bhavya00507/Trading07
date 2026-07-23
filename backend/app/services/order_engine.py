@@ -231,7 +231,7 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
     # Lock user account row
     acc_stmt = select(Account).where(Account.user_id == order.user_id, Account.account_type == order.account_type).with_for_update()
     acc_res = await db.execute(acc_stmt)
-    account = acc_res.scalar_one_or_none()
+    account = acc_res.scalars().first()
     if not account:
         return
 
@@ -471,7 +471,7 @@ async def close_position_sltp_internal(db: AsyncSession, position: Position, exi
     """Internal helper to close a position and record trade history. Does not recalculate metrics."""
     acc_stmt = select(Account).where(Account.user_id == position.user_id, Account.account_type == position.account_type).with_for_update()
     acc_res = await db.execute(acc_stmt)
-    account = acc_res.scalar_one_or_none()
+    account = acc_res.scalars().first()
     if not account:
         return
         
@@ -557,7 +557,7 @@ async def close_position_sltp(db: AsyncSession, position: Position, exit_price: 
     # Recalculate margins and equity
     acc_stmt = select(Account).where(Account.user_id == position.user_id, Account.account_type == position.account_type).with_for_update()
     acc_res = await db.execute(acc_stmt)
-    account = acc_res.scalar_one_or_none()
+    account = acc_res.scalars().first()
     if account:
         await recalculate_user_metrics(db, position.user_id, account)
         
@@ -598,7 +598,7 @@ async def process_new_order(db: AsyncSession, order_data, user_id: uuid.UUID, st
         # Lock user account row
         acc_stmt = select(Account).where(Account.user_id == user_id, Account.account_type == acct_type).with_for_update()
         acc_res = await db.execute(acc_stmt)
-        account = acc_res.scalar_one_or_none()
+        account = acc_res.scalars().first()
         
         if not account:
             account = Account(
