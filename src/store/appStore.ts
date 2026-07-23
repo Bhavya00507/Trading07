@@ -4,7 +4,6 @@ import { Instrument, Account, TradeHistory } from '../types';
 import { getApiUrl } from '../services/config';
 import { useOrderStore } from './orderStore';
 import { usePositionStore } from './positionStore';
-import { marketWebSocket } from '../services/marketWebSocket';
 
 export type Toast = {
   id: string;
@@ -84,7 +83,7 @@ export const useAppStore = create<AppState>()(
       logout: () => {
         // Disconnect active WebSockets
         try {
-          marketWebSocket.disconnect();
+          import('../services/marketWebSocket').then((m) => m.marketWebSocket.disconnect()).catch(() => {});
         } catch (e) {
           console.error('WebSocket disconnect error:', e);
         }

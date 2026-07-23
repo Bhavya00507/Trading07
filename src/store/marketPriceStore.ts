@@ -1,7 +1,6 @@
 // src/store/marketPriceStore.ts
 import { createWithEqualityFn } from 'zustand/traditional';
 import { useAppStore } from './appStore';
-import { marketWebSocket } from '../services/marketWebSocket';
 import { goldApi } from '../services/goldApi';
 
 export interface PriceInfo {
@@ -179,7 +178,7 @@ export const useMarketPriceStore = createWithEqualityFn<MarketPriceState>((set, 
 
   subscribe: (symbol, timeframe = '1m') => {
     const sym = symbol.toUpperCase();
-    marketWebSocket.subscribe(sym, timeframe);
+    import('../services/marketWebSocket').then((m) => m.marketWebSocket.subscribe(sym, timeframe)).catch(() => {});
     if (sym === 'XAUUSD' || sym === 'XAGUSD') {
       goldApi.subscribe(sym);
     }
@@ -187,20 +186,24 @@ export const useMarketPriceStore = createWithEqualityFn<MarketPriceState>((set, 
 
   unsubscribe: (symbol, timeframe = '1m') => {
     const sym = symbol.toUpperCase();
-    marketWebSocket.unsubscribe(sym, timeframe);
+    import('../services/marketWebSocket').then((m) => m.marketWebSocket.unsubscribe(sym, timeframe)).catch(() => {});
     if (sym === 'XAUUSD' || sym === 'XAGUSD') {
       goldApi.unsubscribe(sym);
     }
   }
 }));
 
-// Setup automatic sync when active instrument changes in appStore
-let lastSymbol = useAppStore.getState().selectedInstrument?.symbol;
+// Setup automatic sync when active instrument changes in appStore after module load
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    let lastSymbol = useAppStore.getState().selectedInstrument?.symbol;
 
-useAppStore.subscribe((state) => {
-  const currentSymbol = state.selectedInstrument?.symbol;
-  if (currentSymbol !== lastSymbol) {
-    lastSymbol = currentSymbol;
-    useMarketPriceStore.getState().syncActiveSymbol();
-  }
-});
+    useAppStore.subscribe((state) => {
+      const currentSymbol = state.selectedInstrument?.symbol;
+      if (currentSymbol !== lastSymbol) {
+        lastSymbol = currentSymbol;
+        useMarketPriceStore.getState().syncActiveSymbol();
+      }
+    });
+  }, 0);
+}
