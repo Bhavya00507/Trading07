@@ -6,7 +6,7 @@
   "author": "TradingPlatform Inc.",
   "main": "main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev-server.js",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
@@ -41,16 +41,9 @@
     "vite": "^5.0.0"
   },
   "build": {
-    "appId": "com.trading.platform",
-    "productName": "TradingTerminal",
-    "copyright": "Copyright © 2026 TradingPlatform Inc.",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "tradingplatform",
-        "repo": "terminal"
-      }
-    ],
+    "appId": "com.quantum.terminal",
+    "productName": "Quantum Terminal",
+    "copyright": "Copyright © 2026 Quantum Terminal Inc.",
     "directories": {
       "output": "dist-desktop"
     },
@@ -59,6 +52,13 @@
       "main.js",
       "splash.html",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist/backend",
+        "to": "backend",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": [
@@ -72,7 +72,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Trading Terminal"
+      "shortcutName": "Quantum Terminal"
     }
   }
 }

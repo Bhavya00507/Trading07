@@ -330,6 +330,22 @@ app.on('window-all-closed', () => {
   }
 });
 
+app.on('will-quit', () => {
+  log.info('App will quit. Cleaning up backend process...');
+  if (backendProcess && !backendProcess.killed) {
+    try {
+      if (process.platform === 'win32') {
+        const { execSync } = require('child_process');
+        execSync(`taskkill /pid ${backendProcess.pid} /T /F`);
+      } else {
+        backendProcess.kill('SIGTERM');
+      }
+    } catch (err) {
+      log.error(`Error terminating backend process: ${err.message}`);
+    }
+  }
+});
+
 app.on('quit', () => {
   log.info('App quitting...');
 });
