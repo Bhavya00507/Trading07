@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 from app.models import Base, GUID
 
 class User(Base):
@@ -24,3 +25,5 @@ class User(Base):
     ibkr_api_secret = Column(String, nullable=True)
     mt5_api_key = Column(String, nullable=True)
     mt5_api_secret = Column(String, nullable=True)
+
+    webhook_keys = relationship("WebhookKey", back_populates="user", cascade="all, delete-orphan")

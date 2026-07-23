@@ -22,6 +22,8 @@ interface HeaderProps {
   setBottomOpen: (val: boolean) => void;
   isFullscreenChart: boolean;
   setFullscreenChart: (val: boolean) => void;
+  isAutomationOpen?: boolean;
+  setAutomationOpen?: (val: boolean) => void;
 }
 
 interface UserAccount {
@@ -51,6 +53,8 @@ const Header: React.FC<HeaderProps> = ({
   setBottomOpen,
   isFullscreenChart,
   setFullscreenChart,
+  isAutomationOpen,
+  setAutomationOpen,
 }) => {
   const connectionStatus = useMarketStore((s) => s.connectionStatus);
   const user = useAppStore((s) => s.user);
@@ -276,6 +280,24 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   📥 Workspace
                 </button>
+                {setAutomationOpen && (
+                  <button
+                    onClick={() => setAutomationOpen(!isAutomationOpen)}
+                    style={{
+                      background: isAutomationOpen ? '#00f0ff' : 'transparent',
+                      border: '1px solid #1b2235',
+                      borderRadius: '4px',
+                      color: isAutomationOpen ? '#070b14' : '#8e8e93',
+                      fontSize: '11px',
+                      padding: '4px 8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                    title="Toggle Automation & TradingView Webhooks Gateway"
+                  >
+                    🤖 Automation
+                  </button>
+                )}
               </>
             )}
           </div>

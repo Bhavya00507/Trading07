@@ -19,6 +19,7 @@ const Auth = React.lazy(() => import('./components/Auth'));
 const CommandPalette = React.lazy(() => import('./components/CommandPalette'));
 const StatusBar = React.lazy(() => import('./components/StatusBar'));
 const MobileLayout = React.lazy(() => import('./components/MobileLayout').then(m => ({ default: m.MobileLayout })));
+const AutomationPanel = React.lazy(() => import('./components/AutomationPanel').then(m => ({ default: m.AutomationPanel })));
 
 const PanelFallback: React.FC<{ name: string }> = ({ name }) => (
   <div style={{
@@ -67,6 +68,9 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('layout-fullscreen-chart');
     return saved !== null ? saved === 'true' : false;
   });
+
+  const [isAutomationOpen, setAutomationOpen] = useState(false);
+
 
   const [watchlistWidth, setWatchlistWidth] = useState(() => {
     const saved = localStorage.getItem('layout-watchlist-width');
@@ -437,6 +441,8 @@ const App: React.FC = () => {
           setBottomOpen={setBottomOpen}
           isFullscreenChart={isFullscreenChart}
           setFullscreenChart={setFullscreenChart}
+          isAutomationOpen={isAutomationOpen}
+          setAutomationOpen={setAutomationOpen}
         />
       </ErrorBoundary>
 
@@ -454,54 +460,64 @@ const App: React.FC = () => {
         ))}
       </div>
 
-      {/* Main Workspace Workspace */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div className="workspace" style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#000', gap: 0 }}>
-          {/* Watchlist Panel */}
-          {showWatchlist && (
-            <>
-              <aside className="watchlist-panel" style={{ width: `${watchlistWidth}px`, flex: '0 0 auto', borderRight: '1px solid #1b2235', background: '#0d1322', padding: '10px', overflowY: 'auto' }}>
-                <ErrorBoundary fallback={<PanelFallback name="Watchlist" />}>
-                  <Watchlist />
-                </ErrorBoundary>
-              </aside>
-              {/* Drag vertical resize bar */}
-              <div className="resize-handle-col" onMouseDown={handleWatchlistResize} />
-            </>
-          )}
-
-          {/* Chart Panel */}
-          <main className="chart-panel" style={{ flex: 1, padding: '10px', overflow: 'hidden', background: '#070b14', display: 'flex', flexDirection: 'column' }}>
-            <ErrorBoundary fallback={<PanelFallback name="Chart" />}>
-              <Chart />
+      {/* Main Workspace Area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+        {isAutomationOpen ? (
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            <ErrorBoundary fallback={<PanelFallback name="Automation Gateway" />}>
+              <AutomationPanel />
             </ErrorBoundary>
-          </main>
-
-          {/* Order Panel */}
-          {showOrderPanel && (
-            <>
-              {/* Drag vertical resize bar */}
-              <div className="resize-handle-col" onMouseDown={handleOrderResize} />
-              <aside className="order-panel" style={{ width: `${orderPanelWidth}px`, flex: '0 0 auto', borderLeft: '1px solid #1b2235', background: '#0d1322', padding: '10px', overflowY: 'auto' }}>
-                <ErrorBoundary fallback={<PanelFallback name="Order Panel" />}>
-                  <OrderPanel />
-                </ErrorBoundary>
-              </aside>
-            </>
-          )}
-        </div>
-
-        {/* Bottom Panel Workspace Category Tab Container */}
-        {showBottomBar && (
-          <div style={{ height: `${bottomHeight}px`, flex: '0 0 auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            {/* Drag horizontal height bar */}
-            <div className="resize-handle-row" onMouseDown={handleBottomResize} />
-            <footer className="bottom-bar" style={{ flex: 1, borderTop: '1px solid #1b2235', background: '#0d1322', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <ErrorBoundary fallback={<PanelFallback name="Bottom Panel" />}>
-                <BottomPanel />
-              </ErrorBoundary>
-            </footer>
           </div>
+        ) : (
+          <>
+            <div className="workspace" style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#000', gap: 0 }}>
+              {/* Watchlist Panel */}
+              {showWatchlist && (
+                <>
+                  <aside className="watchlist-panel" style={{ width: `${watchlistWidth}px`, flex: '0 0 auto', borderRight: '1px solid #1b2235', background: '#0d1322', padding: '10px', overflowY: 'auto' }}>
+                    <ErrorBoundary fallback={<PanelFallback name="Watchlist" />}>
+                      <Watchlist />
+                    </ErrorBoundary>
+                  </aside>
+                  {/* Drag vertical resize bar */}
+                  <div className="resize-handle-col" onMouseDown={handleWatchlistResize} />
+                </>
+              )}
+
+              {/* Chart Panel */}
+              <main className="chart-panel" style={{ flex: 1, padding: '10px', overflow: 'hidden', background: '#070b14', display: 'flex', flexDirection: 'column' }}>
+                <ErrorBoundary fallback={<PanelFallback name="Chart" />}>
+                  <Chart />
+                </ErrorBoundary>
+              </main>
+
+              {/* Order Panel */}
+              {showOrderPanel && (
+                <>
+                  {/* Drag vertical resize bar */}
+                  <div className="resize-handle-col" onMouseDown={handleOrderResize} />
+                  <aside className="order-panel" style={{ width: `${orderPanelWidth}px`, flex: '0 0 auto', borderLeft: '1px solid #1b2235', background: '#0d1322', padding: '10px', overflowY: 'auto' }}>
+                    <ErrorBoundary fallback={<PanelFallback name="Order Panel" />}>
+                      <OrderPanel />
+                    </ErrorBoundary>
+                  </aside>
+                </>
+              )}
+            </div>
+
+            {/* Bottom Panel Workspace Category Tab Container */}
+            {showBottomBar && (
+              <div style={{ height: `${bottomHeight}px`, flex: '0 0 auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                {/* Drag horizontal height bar */}
+                <div className="resize-handle-row" onMouseDown={handleBottomResize} />
+                <footer className="bottom-bar" style={{ flex: 1, borderTop: '1px solid #1b2235', background: '#0d1322', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <ErrorBoundary fallback={<PanelFallback name="Bottom Panel" />}>
+                    <BottomPanel />
+                  </ErrorBoundary>
+                </footer>
+              </div>
+            )}
+          </>
         )}
       </div>
 

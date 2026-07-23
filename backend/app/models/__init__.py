@@ -55,3 +55,4 @@ from app.models.alert import DBPriceAlert
 from app.models.workspace import DBWorkspace
 from app.models.playbook import SetupPatternModel
 from app.models.instrument import Instrument
+from app.models.webhook import WebhookKey, WebhookLog

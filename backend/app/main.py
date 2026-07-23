@@ -64,12 +64,17 @@ from app.api.playbooks import router as playbooks_router
 from app.api.paper import router as paper_router
 from app.api.license import router as license_router
 from app.api.brokers import router as brokers_router
+from app.api.webhooks import router as webhooks_router
 
 from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure database schema tables exist
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     # Launch market data feed
     asyncio.create_task(start_market_feed())
     
@@ -315,6 +320,7 @@ app.include_router(playbooks_router)
 app.include_router(paper_router)
 app.include_router(license_router)
 app.include_router(brokers_router)
+app.include_router(webhooks_router)
 
 
 # Startup event to launch market data feed and tables
