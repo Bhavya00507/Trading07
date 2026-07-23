@@ -10,7 +10,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
-    "electron:dev": "electron .",
+    "electron:dev": "npm run build && electron .",
     "electron:build": "npm run build && electron-builder build --win"
   },
   "dependencies": {

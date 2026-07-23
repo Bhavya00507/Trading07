@@ -220,10 +220,18 @@ function createMainWindow() {
 
   const indexPath = path.join(__dirname, 'dist', 'index.html');
 
+  // Purge Chromium session cache on startup to prevent stale frontend builds
+  if (mainWindow.webContents && mainWindow.webContents.session) {
+    mainWindow.webContents.session.clearCache().catch((err) => {
+      log.error(`[Cache Clear Error] ${err.message}`);
+    });
+  }
+
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173/').catch(() => {
-      log.info(`[Dev Fallback] Dev server unreachable. Loading built bundle: ${indexPath}`);
-      mainWindow.loadFile(indexPath).catch((err) => {
+    log.info(`[Development] Loading latest React build from: ${indexPath}`);
+    mainWindow.loadFile(indexPath).catch(() => {
+      log.info(`[Dev Fallback] Loading dev server http://localhost:5173/`);
+      mainWindow.loadURL('http://localhost:5173/').catch((err) => {
         log.error(`[Dev Fallback] Load failed: ${err.message}`);
       });
     });
