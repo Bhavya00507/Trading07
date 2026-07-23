@@ -10,5 +10,6 @@
   "supportEmail": "support@quantumterminal.io",
   "websiteUrl": "https://quantumterminal.io",
   "copyright": "© 2026 Quantum Capital Technologies Inc. All Rights Reserved.",
-  "themeMode": "dark"
+  "themeMode": "dark",
+  "version": "1.0.0"
 }
