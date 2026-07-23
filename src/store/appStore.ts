@@ -4,6 +4,7 @@ import { Instrument, Account, TradeHistory } from '../types';
 import { getApiUrl } from '../services/config';
 import { useOrderStore } from './orderStore';
 import { usePositionStore } from './positionStore';
+import { marketWebSocket } from '../services/marketWebSocket';
 
 export type Toast = {
   id: string;
@@ -22,6 +23,7 @@ type AppState = {
   settings: Settings;
   account: Account | null;
   token: string | null;
+  refreshToken: string | null;
   user: { id: string; username: string; email: string } | null;
   toasts: Toast[];
   history: TradeHistory[];
@@ -30,7 +32,7 @@ type AppState = {
   setMode: (mode: Settings['mode']) => void;
   toggleTheme: () => void;
   setAccount: (account: Account) => void;
-  login: (token: string, user: { id: string; username: string; email: string }) => void;
+  login: (token: string, user: { id: string; username: string; email: string }, refreshToken?: string) => void;
   logout: () => void;
   syncState: () => Promise<void>;
   setActiveAccountType: (type: string) => Promise<void>;
@@ -64,6 +66,7 @@ export const useAppStore = create<AppState>()(
       settings: { mode: 'beginner', darkTheme: true },
       account: null,
       token: null,
+      refreshToken: null,
       user: null,
       toasts: [],
       history: [],
@@ -73,17 +76,34 @@ export const useAppStore = create<AppState>()(
       toggleTheme: () =>
           set((s) => ({ settings: { ...s.settings, darkTheme: !s.settings.darkTheme } })),
       setAccount: (account) => set({ account }),
-      login: (token, user) => {
-        set({ token, user });
+      login: (token, user, refreshToken) => {
+        set({ token, refreshToken: refreshToken || null, user });
         // Automatically trigger sync on login
         get().syncState();
       },
       logout: () => {
-        set({ token: null, user: null, account: null, toasts: [], history: [] });
+        // Disconnect active WebSockets
+        try {
+          marketWebSocket.disconnect();
+        } catch (e) {
+          console.error('WebSocket disconnect error:', e);
+        }
+
+        // Reset all Zustand stores
+        set({ token: null, refreshToken: null, user: null, account: null, toasts: [], history: [] });
         useOrderStore.getState().setOrders([]);
         usePositionStore.getState().setPositions([]);
-        // Clear localStorage session and reload to cleanly reset connection and stores
+
+        // Purge session & localStorage keys across Web and Electron Desktop
         localStorage.removeItem('trading-app-store');
+        localStorage.removeItem('quantum_token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('quantum-user-saved-accounts');
+        localStorage.removeItem('quantum-broker-accounts-v3');
+        sessionStorage.clear();
+
+        // Reload window to reset React DOM state
         window.location.reload();
       },
       addToast: (type, text) => {
@@ -160,11 +180,12 @@ export const useAppStore = create<AppState>()(
     {
       name: 'trading-app-store',
       storage: createJSONStorage(() => localStorage),
-      // Persist settings, watchlist, token, and user details across refreshes
+      // Persist settings, watchlist, token, refreshToken, and user details across refreshes
       partialize: (state) => ({
         settings: state.settings,
         watchlist: state.watchlist,
         token: state.token,
+        refreshToken: state.refreshToken,
         user: state.user,
         activeAccountType: state.activeAccountType
       })

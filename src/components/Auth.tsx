@@ -137,7 +137,7 @@ const Auth: React.FC = () => {
         }
 
         try {
-            loginAction(data.access_token, data.user);
+            loginAction(data.access_token, data.user, data.refresh_token);
         } catch (err) {
             console.error("Login failed", err);
             throw err;

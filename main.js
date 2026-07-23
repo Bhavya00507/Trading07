@@ -218,13 +218,18 @@ function createMainWindow() {
     if (level >= 2) log.error(`[Renderer] ${message}`);
   });
 
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
+
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173/');
+    mainWindow.loadURL('http://localhost:5173/').catch(() => {
+      log.info(`[Dev Fallback] Dev server unreachable. Loading built bundle: ${indexPath}`);
+      mainWindow.loadFile(indexPath).catch((err) => {
+        log.error(`[Dev Fallback] Load failed: ${err.message}`);
+      });
+    });
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, 'dist', 'index.html');
     log.info(`[Production] Loading index from: ${indexPath}`);
-    
     mainWindow.loadFile(indexPath).catch((err) => {
       log.error(`[Production] loadFile failed: ${err.message}`);
       const fallback = path.join(process.resourcesPath, 'app', 'dist', 'index.html');
