@@ -18,7 +18,8 @@ a = Analysis(
         'psycopg_binary',
         'email.mime.multipart',
         'email.mime.text',
-        'jinja2'
+        'jinja2',
+        'pydantic'
     ],
     hookspath=[],
     hooksconfig={},
@@ -27,6 +28,10 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+# Filter out pydantic compiled .pyd C-extensions to prevent Windows AppControl DLL blocks
+a.binaries = [x for x in a.binaries if not ('pydantic' in x[0].lower() and x[0].endswith('.pyd'))]
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
