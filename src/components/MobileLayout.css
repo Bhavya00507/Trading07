@@ -1072,3 +1072,205 @@
 .mobile-modal-btn.confirm-btn:active {
   background: var(--danger-hover);
 }
+
+/* Fixed Bottom Action Bar for Mobile Chart View */
+.mobile-fixed-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(10, 14, 26, 0.96);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 105;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.mobile-action-bar-btn {
+  flex: 1;
+  padding: 10px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-action-bar-btn:active {
+  transform: scale(0.95);
+}
+
+.mobile-action-bar-btn.buy {
+  background: linear-gradient(135deg, #00c076, #007a4a);
+  border-color: rgba(0, 192, 118, 0.6);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(0, 192, 118, 0.3);
+}
+
+.mobile-action-bar-btn.sell {
+  background: linear-gradient(135deg, #ff4d57, #cc2d36);
+  border-color: rgba(255, 77, 87, 0.6);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 77, 87, 0.3);
+}
+
+.mobile-action-bar-btn.quick {
+  background: linear-gradient(135deg, #2962ff, #1a40c0);
+  border-color: rgba(41, 98, 255, 0.6);
+  color: #ffffff;
+}
+
+.mobile-action-bar-btn.close {
+  background: rgba(255, 77, 87, 0.2);
+  border-color: rgba(255, 77, 87, 0.5);
+  color: #ff4d57;
+}
+
+.mobile-action-bar-btn.reverse {
+  background: rgba(167, 139, 250, 0.2);
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #a78bfa;
+}
+
+.mobile-action-bar-btn.be {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.5);
+  color: #d4af37;
+}
+
+.mobile-action-bar-btn.trail {
+  background: rgba(251, 146, 60, 0.2);
+  border-color: rgba(251, 146, 60, 0.5);
+  color: #fb923c;
+}
+
+.mobile-action-bar-btn.modify {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: rgba(96, 165, 250, 0.5);
+  color: #60a5fa;
+}
+
+/* Professional Mobile Bottom Sheet Order Ticket */
+.mobile-bottom-sheet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeInOverlay 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-bottom-sheet {
+  background: rgba(10, 14, 26, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  padding: 18px 20px 24px;
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 0, 0, 0.5);
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUpSheet 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sheet-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+}
+
+.sheet-subtitle {
+  font-size: 12px;
+  color: #00c076;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.close-sheet-btn {
+  background: transparent;
+  border: none;
+  color: #8f929d;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.bottom-sheet-body {
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-metrics-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(20, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+
+.summary-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-lbl {
+  font-size: 9px;
+  color: #8f929d;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-val {
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.metric-val.risk { color: #ff4d57; }
+.metric-val.reward { color: #00c076; }
+.metric-val.rr { color: #d4af37; }
+

@@ -212,11 +212,25 @@ export const MobileLayout: React.FC = React.memo(() => {
     });
   }, [watchlist, activeCategory, searchQuery]);
 
+  const [riskPct, setRiskPct] = useState<number>(1.0);
+  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState<boolean>(false);
+  const [isModifySheetOpen, setIsModifySheetOpen] = useState<boolean>(false);
+
   const activeInstrument = selectedInstrument || watchlist[0];
 
   const livePrice = useMarketPriceStore(
     (s) => s.currentPrice
   ) ?? activeInstrument?.price ?? 0;
+
+  const activePositionForSymbol = openPositions.find(
+    (p) => p.symbol === activeInstrument?.symbol && p.quantity !== 0
+  );
+
+  const slVal = stopLoss ? parseFloat(stopLoss) : 0;
+  const tpVal = takeProfit ? parseFloat(takeProfit) : 0;
+  const estimatedRisk = slVal > 0 ? Math.abs(livePrice - slVal) * quantity : (account?.equity ? (account.equity * (riskPct / 100)) : 50);
+  const estimatedReward = tpVal > 0 ? Math.abs(tpVal - livePrice) * quantity : estimatedRisk * 2;
+  const rrRatio = estimatedRisk > 0 && estimatedReward > 0 ? `1 : ${(estimatedReward / estimatedRisk).toFixed(2)}` : '1 : 2.00';
 
   // Set default limit price when selecting limit type
   useEffect(() => {
@@ -448,41 +462,145 @@ export const MobileLayout: React.FC = React.memo(() => {
 
         {/* TAB 2: CHART */}
         {activeTab === 'chart' && (
-          <div className="tab-pane chart-pane" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ flex: 1, position: 'relative' }}>
+          <div className="tab-pane chart-pane" style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
               <Chart />
             </div>
-            
-            {/* Quick Actions Footer Overlaid on Chart Pane */}
-            <div className="chart-floating-controls">
-              <button className="chart-action-fab" onClick={() => setIsIndicatorModalOpen(true)}>
-                ⚙️ Indicators
-              </button>
-              <button className="chart-action-fab" onClick={() => setActiveTab('trade')}>
-                ⚡ Quick Trade
-              </button>
-            </div>
 
-            {/* Floating Indicators Modal */}
-            {isIndicatorModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsIndicatorModalOpen(false)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <div className="modal-header">
-                    <h3>Indicators Configuration</h3>
-                    <button className="close-modal-btn" onClick={() => setIsIndicatorModalOpen(false)}>×</button>
-                  </div>
-                  <div className="modal-body">
-                    <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Toggle chart indicator layers:</p>
-                    {/* Simplified checklist updates */}
-                    <div className="indicators-checklist">
-                      <label><input type="checkbox" defaultChecked /> EMA 20/50/200</label>
-                      <label><input type="checkbox" defaultChecked /> Bollinger Bands</label>
-                      <label><input type="checkbox" defaultChecked /> RSI Oscillator</label>
-                      <label><input type="checkbox" /> MACD Histogram</label>
-                      <label><input type="checkbox" /> ATR Panel</label>
+            {/* Professional Bottom Sheet Order Ticket (Opened via bottom 'Trade' nav button) */}
+            {isOrderSheetOpen && (
+              <div className="mobile-bottom-sheet-overlay" onClick={() => setIsOrderSheetOpen(false)}>
+                <div className="mobile-bottom-sheet" onClick={(e) => e.stopPropagation()}>
+                  <div className="bottom-sheet-header">
+                    <div>
+                      <h3 className="sheet-title">
+                        {isModifySheetOpen ? `MODIFY ${activeInstrument?.symbol}` : `${side.toUpperCase()} ${activeInstrument?.symbol}`}
+                      </h3>
+                      <span className="sheet-subtitle">${livePrice.toFixed(4)}</span>
                     </div>
-                    <button className="apply-indicators-btn" onClick={() => setIsIndicatorModalOpen(false)}>
-                      Apply configuration
+                    <button className="close-sheet-btn" onClick={() => setIsOrderSheetOpen(false)}>×</button>
+                  </div>
+
+                  <div className="bottom-sheet-body">
+                    {/* Side Selectors (Only if new order) */}
+                    {!isModifySheetOpen && (
+                      <div className="side-selectors-row" style={{ marginBottom: 12 }}>
+                        <button className={`side-btn buy ${side === 'buy' ? 'active' : ''}`} onClick={() => setSide('buy')}>
+                          BUY / LONG
+                        </button>
+                        <button className={`side-btn sell ${side === 'sell' ? 'active' : ''}`} onClick={() => setSide('sell')}>
+                          SELL / SHORT
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Quantity Field */}
+                    <div className="form-group">
+                      <label className="input-label">Quantity (Lots)</label>
+                      <div className="qty-input-wrapper">
+                        <button className="qty-adj-btn" onClick={() => adjustQty(-0.1)}>-0.1</button>
+                        <button className="qty-adj-btn" onClick={() => adjustQty(-0.01)}>-0.01</button>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="qty-main-input"
+                          value={quantity}
+                          onChange={(e) => setQuantity(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
+                        />
+                        <button className="qty-adj-btn" onClick={() => adjustQty(0.01)}>+0.01</button>
+                        <button className="qty-adj-btn" onClick={() => adjustQty(0.1)}>+0.1</button>
+                      </div>
+                      <div className="presets-row">
+                        <button onClick={() => setQuantity(0.01)} className="preset-btn">Min (0.01)</button>
+                        <button onClick={() => setQuantity(0.1)} className="preset-btn">Micro (0.1)</button>
+                        <button onClick={() => setQuantity(1.0)} className="preset-btn">Standard (1.0)</button>
+                      </div>
+                    </div>
+
+                    {/* Risk % Field */}
+                    <div className="form-group" style={{ marginTop: 10 }}>
+                      <label className="input-label">Risk % of Equity</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          max="100"
+                          className="mobile-input"
+                          style={{ flex: 1 }}
+                          value={riskPct}
+                          onChange={(e) => setRiskPct(Math.min(100, Math.max(0.1, parseFloat(e.target.value) || 1.0)))}
+                        />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#d4af37' }}>%</span>
+                      </div>
+                    </div>
+
+                    {/* Stop Loss & Take Profit Targets */}
+                    <div className="sltp-toggle-row" style={{ marginTop: 10 }}>
+                      <div className="sltp-field">
+                        <label>Stop Loss (Price)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="mobile-input-small"
+                          placeholder="SL Target"
+                          value={stopLoss}
+                          onChange={(e) => setStopLoss(e.target.value)}
+                        />
+                      </div>
+                      <div className="sltp-field">
+                        <label>Take Profit (Price)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="mobile-input-small"
+                          placeholder="TP Target"
+                          value={takeProfit}
+                          onChange={(e) => setTakeProfit(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Leverage Slider */}
+                    <div className="form-group" style={{ marginTop: 10 }}>
+                      <label className="input-label">Leverage Multiplier ({leverage}x)</label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="125"
+                        className="mobile-slider"
+                        value={leverage}
+                        onChange={(e) => setLeverage(parseInt(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Real-time Estimated Risk, Reward, and RR */}
+                    <div className="sheet-metrics-summary">
+                      <div className="summary-metric">
+                        <span className="metric-lbl">Est. Risk</span>
+                        <span className="metric-val risk">${estimatedRisk.toFixed(2)}</span>
+                      </div>
+                      <div className="summary-metric">
+                        <span className="metric-lbl">Est. Reward</span>
+                        <span className="metric-val reward">${estimatedReward.toFixed(2)}</span>
+                      </div>
+                      <div className="summary-metric">
+                        <span className="metric-lbl">RR Ratio</span>
+                        <span className="metric-val rr">{rrRatio}</span>
+                      </div>
+                    </div>
+
+                    {/* Submit Action */}
+                    <button
+                      disabled={loading}
+                      className={`execute-order-btn ${side}`}
+                      style={{ marginTop: 14 }}
+                      onClick={async () => {
+                        await handlePlaceOrder();
+                        setIsOrderSheetOpen(false);
+                      }}
+                    >
+                      {loading ? 'Processing...' : isModifySheetOpen ? 'UPDATE SL / TP TARGETS' : `PLACE ${side.toUpperCase()} ORDER`}
                     </button>
                   </div>
                 </div>
@@ -772,8 +890,12 @@ export const MobileLayout: React.FC = React.memo(() => {
           </button>
 
           <button
-            className={`nav-item ${activeTab === 'trade' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trade')}
+            className={`nav-item ${activeTab === 'chart' && isOrderSheetOpen ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('chart');
+              setIsModifySheetOpen(false);
+              setIsOrderSheetOpen(true);
+            }}
           >
             <span className="nav-icon">⚡</span>
             <span className="nav-text">Trade</span>

@@ -12,6 +12,11 @@ import { useAlertStore } from '../store/alertStore';
 import { useMarketPriceStore } from '../store/marketPriceStore';
 import { candleEngine } from '../services/candleEngine';
 import { MarketSessionService } from '../services/marketSessionService';
+import { ChartOrderMenu } from './ChartOrderMenu';
+import { ChartRiskCalculator, ChartOrderRequest } from './ChartRiskCalculator';
+import { OrderFlowPanel } from './OrderFlow/OrderFlowPanel';
+import { ChartTradingLayer } from './ChartTrading/ChartTradingLayer';
+import { EventTimelineOverlay } from './ChartTrading/EventTimelineOverlay';
 import {
   calculateEMA,
   calculateVWAP,
@@ -269,7 +274,7 @@ interface SingleChartCellProps {
   setActiveDrawingTool: (tool: string | null) => void;
   drawingColor: string;
   setCells: (newCells: CellState[] | ((prev: CellState[]) => CellState[])) => void;
-  chartType: 'candlestick' | 'hollow' | 'bar' | 'line' | 'area' | 'baseline' | 'heikin';
+  chartType: 'candlestick' | 'hollow' | 'bar' | 'line' | 'area' | 'baseline' | 'heikin' | 'footprint';
   themeBg: string;
   themeGridColor: string;
   themeCrosshairColor: string;
@@ -404,6 +409,13 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
 
   // Advanced Chart Trade Panel & context menu states
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  // Chart Order Placement: right-click / shift+click menu for new orders
+  const [orderMenu, setOrderMenu] = useState<{ x: number; y: number; price: number } | null>(null);
+  const [orderRequest, setOrderRequest] = useState<ChartOrderRequest | null>(null);
+
+  // Live drag tooltip for SL/TP drag showing risk/reward
+  const [dragTooltip, setDragTooltip] = useState<{ x: number; y: number; type: 'sl' | 'tp' | 'ts'; dragPrice: number } | null>(null);
 
   const [entryY, setEntryY] = useState<number | null>(null);
   const [slY, setSlY] = useState<number | null>(null);
@@ -562,9 +574,21 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
   }, [activePosition, livePrice, livePnl]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
-    if (!activePosition) return;
     e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY });
+    const container = mainContainerRef.current;
+    const series = candleSeriesInstance.current;
+    if (activePosition) {
+      // Existing position → show position management menu
+      setContextMenu({ x: e.clientX, y: e.clientY });
+    } else if (container && series) {
+      // No position → show new order placement menu
+      const rect = container.getBoundingClientRect();
+      const mouseY = e.clientY - rect.top;
+      const clickedPrice = series.coordinateToPrice(mouseY);
+      if (clickedPrice !== null) {
+        setOrderMenu({ x: e.clientX, y: e.clientY, price: clickedPrice });
+      }
+    }
   };
 
   const handleClosePos = async () => {
@@ -693,56 +717,6 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
       )
     );
   };
-
-  const [eventCountdowns, setEventCountdowns] = useState<{ id: string; name: string; importance: string; countdown: string }[]>([]);
-
-  useEffect(() => {
-    const events = [
-      { id: '1', name: 'NFP (USD)', importance: 'HIGH', timestamp: Date.now() + 5 * 3600000 },
-      { id: '2', name: 'CPI (GBP)', importance: 'HIGH', timestamp: Date.now() - 30 * 60000 },
-      { id: '3', name: 'FOMC (USD)', importance: 'HIGH', timestamp: Date.now() + 2.5 * 3600000 },
-      { id: '4', name: 'ECB (EUR)', importance: 'HIGH', timestamp: Date.now() + 1.5 * 3600000 },
-      { id: '5', name: 'GDP (USD)', importance: 'MEDIUM', timestamp: Date.now() + 10 * 3600000 },
-      { id: '6', name: 'BoE (GBP)', importance: 'HIGH', timestamp: Date.now() + 72 * 3600000 }
-    ];
-
-    const updateCountdowns = () => {
-      const now = Date.now();
-      const list = events
-        .map((ev) => {
-          const diff = ev.timestamp - now;
-          if (diff < -2 * 3600000) return null; // hide if happened > 2 hours ago
-          
-          if (diff < 0) {
-            const minsAgo = Math.floor(Math.abs(diff) / 60000);
-            return {
-              id: ev.id,
-              name: ev.name,
-              importance: ev.importance,
-              countdown: minsAgo < 5 ? 'LIVE' : `${minsAgo}m ago`
-            };
-          }
-
-          const hours = Math.floor(diff / 3600000);
-          const mins = Math.floor((diff % 3600000) / 60000);
-          const secs = Math.floor((diff % 60000) / 1000);
-          return {
-            id: ev.id,
-            name: ev.name,
-            importance: ev.importance,
-            countdown: hours > 0 ? `${hours}h ${mins}m` : `${mins}m ${secs}s`
-          };
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null)
-        .slice(0, 3); // show top 3 upcoming
-
-      setEventCountdowns(list);
-    };
-
-    updateCountdowns();
-    const interval = setInterval(updateCountdowns, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Escape key to reset tools
   useEffect(() => {
@@ -1135,7 +1109,7 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
       type: 'price',
       precision: precision,
       minMove: minMove,
-    };
+    } as const;
 
     const mainChart = createChart(mainContainerRef.current, {
       layout: {
@@ -1587,47 +1561,6 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
               from: fromIndex,
               to: total + 15,
             });
-          }
-
-          // Overlay high impact events on chart timeline
-          const economicEvents = [
-            { name: 'NFP', importance: 'HIGH', timestamp: Date.now() + 5 * 3600000 },
-            { name: 'CPI', importance: 'HIGH', timestamp: Date.now() - 30 * 60000 },
-            { name: 'FOMC', importance: 'HIGH', timestamp: Date.now() + 2.5 * 3600000 },
-            { name: 'ECB', importance: 'HIGH', timestamp: Date.now() + 1.5 * 3600000 },
-            { name: 'GDP', importance: 'MEDIUM', timestamp: Date.now() + 10 * 3600000 },
-            { name: 'BoE', importance: 'HIGH', timestamp: Date.now() + 72 * 3600000 },
-          ];
-
-          const eventMarkers: any[] = [];
-          economicEvents.forEach((ev) => {
-            const evTimeSec = Math.floor(ev.timestamp / 1000);
-            
-            // Find closest candle time
-            let closestCandle: any = null;
-            let minDiff = Infinity;
-            formatted.forEach((c: any) => {
-              const diff = Math.abs(c.time - evTimeSec);
-              if (diff < minDiff) {
-                minDiff = diff;
-                closestCandle = c;
-              }
-            });
-
-            // Set marker if matches timeline within 1 hour
-            if (closestCandle && minDiff < 3600) {
-              eventMarkers.push({
-                time: closestCandle.time,
-                position: 'aboveBar',
-                color: ev.importance === 'HIGH' ? '#ff4d57' : ev.importance === 'MEDIUM' ? '#ffb74d' : '#ffeb3b',
-                shape: 'circle',
-                text: ev.name,
-              });
-            }
-          });
-
-          if (eventMarkers.length > 0) {
-            candleSeriesInstance.current.setMarkers(eventMarkers);
           }
 
           // Clear old indicators series
@@ -2246,6 +2179,8 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
           axisLabelVisible: true,
           title: `SL: ${price.toFixed(precision)} (Dragging)`,
         });
+        // Update live drag tooltip
+        setDragTooltip({ x: e.clientX + 14, y: e.clientY - 10, type: 'sl', dragPrice: price });
       } else if (type === 'tp' && tpLineRef.current) {
         series.removePriceLine(tpLineRef.current);
         tpLineRef.current = series.createPriceLine({
@@ -2256,6 +2191,8 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
           axisLabelVisible: true,
           title: `TP: ${price.toFixed(precision)} (Dragging)`,
         });
+        // Update live drag tooltip
+        setDragTooltip({ x: e.clientX + 14, y: e.clientY - 10, type: 'tp', dragPrice: price });
       } else if (type === 'ts' && tsLineRef.current) {
         series.removePriceLine(tsLineRef.current);
         tsLineRef.current = series.createPriceLine({
@@ -2266,6 +2203,7 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
           axisLabelVisible: true,
           title: `TS: ${price.toFixed(precision)} (Dragging)`,
         });
+        setDragTooltip({ x: e.clientX + 14, y: e.clientY - 10, type: 'ts', dragPrice: price });
       } else if (type === 'order' && orderId) {
         const item = pendingOrderLinesRef.current.find(i => i.orderId === orderId);
         const ord = pendingOrders.find(o => o.id === orderId);
@@ -2297,6 +2235,8 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
 
       const { type, orderId } = draggingRef.current;
       draggingRef.current = null;
+      // Clear drag tooltip on mouse up
+      setDragTooltip(null);
 
       if (price !== null) {
         if (type === 'order' && orderId) {
@@ -2343,6 +2283,15 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
             condition: 'cross',
           });
           useAppStore.getState().addToast('success', `Price alert created at ${price.toFixed(getPrecision(symbol))} via Alt+Click`);
+        }
+      }
+      // Shift+Click → open new order placement menu (same as right-click when no position)
+      if (e.shiftKey && !draggingRef.current && candleSeriesInstance.current) {
+        const rect = container.getBoundingClientRect();
+        const mouseY = e.clientY - rect.top;
+        const price = candleSeriesInstance.current.coordinateToPrice(mouseY);
+        if (price !== null) {
+          setOrderMenu({ x: e.clientX, y: e.clientY, price });
         }
       }
     };
@@ -2438,8 +2387,19 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#0b0d12' }}>
-        <div style={{ position: 'relative', height: mainHeight, width: '100%' }} onContextMenu={handleContextMenu}>
-          <div ref={mainContainerRef} style={{ height: '100%', width: '100%' }} />
+        {chartType === 'footprint' ? (
+          <OrderFlowPanel symbol={symbol} timeframe={timeframe} />
+        ) : (
+          <div style={{ position: 'relative', height: mainHeight, width: '100%' }} onContextMenu={handleContextMenu}>
+            <ChartTradingLayer symbol={symbol} activeDrawingTool={activeDrawingTool} height={mainHeight} />
+            {mainChartInstance.current && (
+              <EventTimelineOverlay
+                chartInstance={mainChartInstance.current}
+                symbol={symbol}
+                isMobile={typeof window !== 'undefined' && window.innerWidth < 768}
+              />
+            )}
+            <div ref={mainContainerRef} style={{ height: '100%', width: '100%' }} />
 
           {entryY !== null && activePosition && (
             <div style={{
@@ -2932,49 +2892,27 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
                 Close 75%
               </button>
               <div style={{ padding: '4px 12px', color: '#8e8e93', fontSize: '9px', fontWeight: 600 }}>TRAILING STOP</div>
-              <button
-                onClick={() => handleTrailStop(20)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '4px 12px 4px 20px',
-                  color: '#ffffff',
-                  fontSize: '10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                Trail 20 units
-              </button>
-              <button
-                onClick={() => handleTrailStop(50)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '4px 12px 4px 20px',
-                  color: '#ffffff',
-                  fontSize: '10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                Trail 50 units
-              </button>
-              <button
-                onClick={() => handleTrailStop(100)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '4px 12px 4px 20px',
-                  color: '#ffffff',
-                  fontSize: '10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                Trail 100 units
-              </button>
+              {[10, 20, 30, 50, 100].map((pts) => (
+                <button
+                  key={pts}
+                  onClick={() => handleTrailStop(pts)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '4px 12px 4px 20px',
+                    color: '#ffffff',
+                    fontSize: '10px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    width: '100%',
+                  }}
+                >
+                  Trail {pts} units
+                </button>
+              ))}
+
               <div style={{ borderTop: '1px solid #1b2235', margin: '4px 0' }} />
+
               <button
                 onClick={handleDuplicatePos}
                 style={{
@@ -2992,40 +2930,98 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
               </button>
             </div>
           )}
-          {/* Economic Calendar Event Overlay Banner */}
-          <div style={{
-            position: 'absolute',
-            top: '8px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(7, 11, 20, 0.85)',
-            border: '1px solid #1b2235',
-            borderRadius: '4px',
-            padding: '4px 10px',
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center',
-            zIndex: 20,
-            fontSize: '9px',
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-          }}>
-            {eventCountdowns.map((ev) => (
-              <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  backgroundColor: ev.importance === 'HIGH' ? '#ff4d57' : ev.importance === 'MEDIUM' ? '#ffb74d' : '#ffeb3b'
-                }} />
-                <span style={{ fontWeight: 700, color: '#f5f5f7' }}>{ev.name}:</span>
-                <span style={{ color: '#d4af37', fontFamily: 'monospace' }}>{ev.countdown}</span>
+
+          {/* NEW ORDER PLACEMENT MENU — right-click or Shift+Click when no position */}
+          {orderMenu && (
+            <ChartOrderMenu
+              x={orderMenu.x}
+              y={orderMenu.y}
+              price={orderMenu.price}
+              symbol={symbol}
+              precision={getPrecision(symbol)}
+              onSelect={(side, type) => {
+                setOrderRequest({
+                  symbol,
+                  side,
+                  type,
+                  clickedPrice: orderMenu.price,
+                });
+                setOrderMenu(null);
+              }}
+              onClose={() => setOrderMenu(null)}
+            />
+          )}
+
+          {/* RISK CALCULATOR MODAL — shown before placing chart orders */}
+          <ChartRiskCalculator
+            request={orderRequest}
+            onClose={() => setOrderRequest(null)}
+            onOrderPlaced={() => setOrderRequest(null)}
+          />
+
+          {/* LIVE DRAG TOOLTIP — appears during SL/TP/TS drag showing live risk/reward */}
+          {dragTooltip && activePosition && (() => {
+            const prec = getPrecision(symbol);
+            const entry = activePosition.average_price;
+            const currentSL = dragTooltip.type === 'sl' ? dragTooltip.dragPrice : activePosition.stop_loss;
+            const currentTP = dragTooltip.type === 'tp' ? dragTooltip.dragPrice : activePosition.take_profit;
+            const dp = dragTooltip.dragPrice;
+            const slDist = currentSL ? Math.abs(entry - currentSL) : 0;
+            const tpDist = currentTP ? Math.abs(currentTP - entry) : 0;
+            const rrStr = (slDist > 0 && tpDist > 0) ? `1 : ${(tpDist / slDist).toFixed(2)}` : '—';
+            const riskUsd = slDist * Math.abs(activePosition.quantity) * 100000;
+            const rewardUsd = tpDist * Math.abs(activePosition.quantity) * 100000;
+            const tooltipColor = dragTooltip.type === 'sl' ? '#E53935' : dragTooltip.type === 'tp' ? '#43A047' : '#FF9800';
+            return (
+              <div style={{
+                position: 'fixed',
+                left: dragTooltip.x,
+                top: dragTooltip.y,
+                background: 'rgba(7,11,20,0.97)',
+                border: `1px solid ${tooltipColor}`,
+                borderRadius: '5px',
+                padding: '8px 12px',
+                zIndex: 99999,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.7), 0 0 0 1px ${tooltipColor}22`,
+                fontFamily: "'Inter', monospace",
+                fontSize: '10px',
+                color: '#f5f5f7',
+                minWidth: '140px',
+                pointerEvents: 'none',
+              }}>
+                <div style={{ marginBottom: '4px', fontWeight: 700, color: tooltipColor, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {dragTooltip.type.toUpperCase()} Line
+                </div>
+                <div style={{ display: 'grid', gap: '3px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+                    <span style={{ color: '#8e8e93' }}>Entry:</span>
+                    <span style={{ fontFamily: 'monospace' }}>{entry.toFixed(prec)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+                    <span style={{ color: tooltipColor }}>{dragTooltip.type.toUpperCase()}:</span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, color: tooltipColor }}>{dp.toFixed(prec)}</span>
+                  </div>
+                  {slDist > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+                      <span style={{ color: '#ff4d57' }}>Risk:</span>
+                      <span style={{ fontFamily: 'monospace', color: '#ff4d57' }}>~${riskUsd.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {tpDist > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+                      <span style={{ color: '#00c076' }}>Reward:</span>
+                      <span style={{ fontFamily: 'monospace', color: '#00c076' }}>~${rewardUsd.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', borderTop: '1px solid #1b2235', paddingTop: '3px', marginTop: '1px' }}>
+                    <span style={{ color: '#d4af37', fontWeight: 700 }}>R:R</span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#d4af37' }}>{rrStr}</span>
+                  </div>
+                </div>
               </div>
-            ))}
-            {eventCountdowns.length === 0 && (
-              <span style={{ color: '#8e8e93' }}>No high impact releases today</span>
-            )}
-          </div>
+            );
+          })()}
+
           <canvas
             ref={canvasRef}
             style={{
@@ -3041,6 +3037,7 @@ const SingleChartCell = React.memo<SingleChartCellProps>(({
             onMouseMove={handleCanvasMouseMove}
           />
         </div>
+        )}
         {indicators.rsi && (
           <div ref={rsiContainerRef} style={{ height: subHeight, width: '100%', borderTop: '1px solid var(--border-color)' }} />
         )}
@@ -3153,7 +3150,7 @@ const Chart: React.FC = () => {
   const [isDrawingMenuExpanded, setIsDrawingMenuExpanded] = useState(false);
 
   // Chart Upgrades configuration states
-  const [chartType, setChartType] = useState<'candlestick' | 'hollow' | 'bar' | 'line' | 'area' | 'baseline' | 'heikin'>('candlestick');
+  const [chartType, setChartType] = useState<'candlestick' | 'hollow' | 'bar' | 'line' | 'area' | 'baseline' | 'heikin' | 'footprint'>('candlestick');
   const [themeBg, setThemeBg] = useState<string>('#0b0d12');
   const [themeGridColor, setThemeGridColor] = useState<string>('rgba(43, 49, 57, 0.15)');
   const [themeCrosshairColor, setThemeCrosshairColor] = useState<string>('#8f929d');
@@ -3582,6 +3579,7 @@ const Chart: React.FC = () => {
               <option value="area">📉 Area</option>
               <option value="baseline">📉 Baseline</option>
               <option value="heikin">⛩️ Heikin Ashi</option>
+              <option value="footprint">🦶 Footprint (Order Flow)</option>
             </select>
           </div>
 

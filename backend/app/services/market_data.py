@@ -37,6 +37,8 @@ _is_delayed_status: Dict[str, bool] = {
     "GER40": False
 }
 
+_active_matching_symbols = set()
+
 # In-memory store of historical candles
 _candle_history: Dict[str, List[Dict[str, Any]]] = {}
 
@@ -258,6 +260,9 @@ async def handle_price_tick(symbol: str, price: float, is_delayed: bool = False,
     
     # Trigger matching engine checks in database in the background to avoid blocking the event loop
     async def run_matching_engine_bg():
+        if sym in _active_matching_symbols:
+            return
+        _active_matching_symbols.add(sym)
         from app.database.session import AsyncSessionLocal
         from app.services.order_engine import process_market_tick
         try:
@@ -266,6 +271,8 @@ async def handle_price_tick(symbol: str, price: float, is_delayed: bool = False,
                 await db.commit()
         except Exception as e:
             print(f"Error executing pending orders/SL/TP for {sym} at {price}: {e}")
+        finally:
+            _active_matching_symbols.discard(sym)
             
     if bg:
         asyncio.create_task(run_matching_engine_bg())

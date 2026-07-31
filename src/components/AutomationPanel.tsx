@@ -6,7 +6,7 @@ interface WebhookKeyItem {
   name: string;
   api_key_prefix: string;
   broker: string;
-  enabled: bool;
+  enabled: boolean;
   created_at: string;
   last_used?: string;
   raw_api_key?: string;
@@ -209,7 +209,7 @@ export const AutomationPanel: React.FC = () => {
           padding: '12px',
           marginBottom: '20px',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <div>

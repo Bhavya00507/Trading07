@@ -311,12 +311,10 @@ export function runBacktest(
 
   // Expectancy = (Win Rate * Avg Win) - (Loss Rate * Avg Loss)
   const lossRate = totalTrades > 0 ? (losses.length / totalTrades) : 0;
-  const expectancy = ((winRate / 100) * avgWin) - (lossRate * avgLoss);
-
-  // Average Risk/Reward ratio
   const avgWin = wins.length > 0 ? wins.reduce((a, b) => a + b, 0) / wins.length : 0;
   const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
   const avgRR = avgLoss > 0 ? avgWin / avgLoss : avgWin;
+  const expectancy = ((winRate / 100) * avgWin) - (lossRate * avgLoss);
 
   return {
     trades,

@@ -14,6 +14,7 @@ export type Toast = {
 export type Settings = {
   mode: 'beginner' | 'pro';
   darkTheme: boolean;
+  chartTradingEnabled: boolean;
 };
 
 type AppState = {
@@ -30,6 +31,7 @@ type AppState = {
   setSelectedInstrument: (inst: Instrument) => void;
   setMode: (mode: Settings['mode']) => void;
   toggleTheme: () => void;
+  setChartTradingEnabled: (enabled: boolean) => void;
   setAccount: (account: Account) => void;
   login: (token: string, user: { id: string; username: string; email: string }, refreshToken?: string) => void;
   logout: () => void;
@@ -62,7 +64,7 @@ export const useAppStore = create<AppState>()(
         { symbol: 'XAGUSD', name: 'Silver / US Dollar', price: 36, category: 'metals' }
       ] as any[],
       selectedInstrument: { symbol: 'BTCUSDT', name: 'Bitcoin / USDT', price: 65000, category: 'crypto' } as any,
-      settings: { mode: 'beginner', darkTheme: true },
+      settings: { mode: 'beginner', darkTheme: true, chartTradingEnabled: true },
       account: null,
       token: null,
       refreshToken: null,
@@ -74,6 +76,8 @@ export const useAppStore = create<AppState>()(
       setMode: (mode) => set((s) => ({ settings: { ...s.settings, mode } })),
       toggleTheme: () =>
           set((s) => ({ settings: { ...s.settings, darkTheme: !s.settings.darkTheme } })),
+      setChartTradingEnabled: (chartTradingEnabled) =>
+          set((s) => ({ settings: { ...s.settings, chartTradingEnabled } })),
       setAccount: (account) => set({ account }),
       login: (token, user, refreshToken) => {
         set({ token, refreshToken: refreshToken || null, user });

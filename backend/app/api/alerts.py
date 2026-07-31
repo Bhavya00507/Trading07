@@ -4,7 +4,7 @@ from sqlalchemy import select
 from app.database.session import get_db
 from app.models.alert import DBPriceAlert
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import UUID
 import uuid
 import json
@@ -20,7 +20,7 @@ class AlertBase(BaseModel):
     condition: Optional[str] = None
     is_active: bool = True
     is_triggered: bool = False
-    created_at: Optional[str] = None
+    created_at: Optional[Any] = None
     extra_params: Optional[str] = None # JSON string
 
 class AlertResponse(AlertBase):

@@ -33,7 +33,7 @@ const AISignalPanel = lazy(() => import('./AISignalPanel'));
 const TradeExecutionLogPanel = lazy(() => import('./TradeExecutionLogPanel'));
 const AccountAnalyticsPanel = lazy(() => import('./AccountAnalyticsPanel'));
 const SessionPerformancePanel = lazy(() => import('./SessionPerformancePanel'));
-const PortfolioAnalyzerPanel = lazy(() => import('./PortfolioAnalyzerPanel'));
+const PortfolioSystemPanel = lazy(() => import('./PortfolioSystemPanel'));
 
 // Real Data Infrastructure & Level II + Options Chain & AI Copilot additions
 const DOMPanel = lazy(() => import('./DOMPanel'));
@@ -58,6 +58,7 @@ const MarketScannerPanel = lazy(() => import('./MarketScannerPanel'));
 const SettingsPanel = lazy(() => import('./SettingsPanel'));
 const ScreenerPanel = lazy(() => import('./ScreenerPanel'));
 const FuturesPanel = lazy(() => import('./FuturesPanel'));
+const VisualStrategyBuilderPanel = lazy(() => import('./VisualStrategyBuilderPanel'));
 const MicrostructurePanel = lazy(() => import('./MicrostructurePanel'));
 const AIMarketAnalystPanel = lazy(() => import('./AIMarketAnalystPanel'));
 
@@ -96,6 +97,7 @@ type Tab =
   | 'alerts'
   | 'symbols'
   | 'strategymarketplace'
+  | 'visualstrategy'
   | 'fixprotocol'
   | 'reportgenerator'
   | 'settings'
@@ -171,7 +173,7 @@ const BottomPanel: React.FC = () => {
       case 'statistics':
         return <StatisticsPanel />;
       case 'portfolio':
-        return <PortfolioAnalyzerPanel />;
+        return <PortfolioSystemPanel />;
       case 'drawdown':
         return <DrawdownPanel />;
       case 'risk':
@@ -230,6 +232,8 @@ const BottomPanel: React.FC = () => {
         return <SymbolAnalyticsPanel />;
       case 'strategymarketplace':
         return <StrategyMarketplacePanel />;
+      case 'visualstrategy':
+        return <VisualStrategyBuilderPanel />;
       case 'fixprotocol':
         return <FIXProtocolPanel />;
       case 'reportgenerator':

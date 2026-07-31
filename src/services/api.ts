@@ -403,3 +403,9 @@ export const getMarketCalendar = async () => {
   if (!res.ok) throw new Error('Failed to fetch economic calendar');
   return res.json();
 };
+
+export const fetchDOMLadder = async (symbol: string, depthLevels = 50, tickSize = 0.5) => {
+  const res = await fetchWithRetry(`${API_BASE}/orderflow/dom?symbol=${encodeURIComponent(symbol)}&depth_levels=${depthLevels}&tick_size=${tickSize}`);
+  if (!res.ok) throw new Error('Failed to fetch DOM ladder');
+  return res.json();
+};

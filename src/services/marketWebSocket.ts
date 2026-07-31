@@ -132,10 +132,11 @@ class MarketWebSocket {
    */
   private _intentionalClose = false;
 
+  private incomingPacketCount = 0;
+  private outgoingPacketCount = 0;
+
   constructor(url: string) {
     this.url = url;
-    // Do NOT call connect() here.
-    // The useMarketWebSocket hook is the sole driver of connection lifecycle.
   }
 
   private setStatus(status: ConnectionStatus) {
@@ -188,10 +189,7 @@ class MarketWebSocket {
 
       this.ws.onmessage = (ev) => {
         try {
-          const stats = useMarketStore.getState();
-          useMarketStore.getState().updateFeedStats({
-            packetsReceived: stats.packetsReceived + 1,
-          });
+          this.incomingPacketCount++;
 
           const payload: WSEvent = JSON.parse(ev.data);
 
@@ -482,10 +480,7 @@ class MarketWebSocket {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(data));
-        const stats = useMarketStore.getState();
-        useMarketStore.getState().updateFeedStats({
-          packetsSent: stats.packetsSent + 1,
-        });
+        this.outgoingPacketCount++;
       } catch (err) {
         console.error('Failed to send payload:', err);
       }

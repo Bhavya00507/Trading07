@@ -13,14 +13,17 @@ from app.core.config import DATABASE_URL
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import event
+from sqlalchemy.pool import NullPool
 
 # connection tweaks
 connect_args = {}
+pool_kwargs = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"timeout": 30}
+    pool_kwargs["poolclass"] = NullPool
 
 engine = create_async_engine(
-    DATABASE_URL, echo=False, future=True, connect_args=connect_args
+    DATABASE_URL, echo=False, future=True, connect_args=connect_args, **pool_kwargs
 )
 async_engine = engine  # alias
 

@@ -255,6 +255,17 @@ export const SettingsPanel: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ margin: 0, fontSize: '13px', color: '#d4af37', textTransform: 'uppercase' }}>Execution & Trading Settings</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(212, 175, 55, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                <input
+                  type="checkbox"
+                  id="chart-trading-enable"
+                  checked={settings.chartTradingEnabled ?? true}
+                  onChange={(e) => useAppStore.getState().setChartTradingEnabled(e.target.checked)}
+                />
+                <label htmlFor="chart-trading-enable" style={{ color: '#ffffff', cursor: 'pointer', fontWeight: 700 }}>
+                  Chart Trading (☑ Enabled: Show chart trading controls & hide side order panel)
+                </label>
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input type="checkbox" id="oneclick" checked={oneClickTrading} onChange={(e) => setOneClickTrading(e.target.checked)} />
                 <label htmlFor="oneclick" style={{ color: '#8e8e93', cursor: 'pointer', fontWeight: 600 }}>Enable One-Click Trading (MKT order execution on click)</label>

@@ -7,6 +7,7 @@ import { useAutomationStore } from './store/automationStore';
 import { placeOrder, cancelOrder, modifySLTP } from './services/api';
 import { marketWebSocket } from './services/marketWebSocket';
 import { useOrderStore } from './store/orderStore';
+import { usePositionStore } from './store/positionStore';
 import { loadBranding } from './services/brandingService';
 import './App.css';
 

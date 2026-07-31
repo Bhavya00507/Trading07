@@ -20,6 +20,7 @@ export type Candle = {
 type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
 
 type MarketState = {
+  selectedSymbol?: string; // added selectedSymbol for OrderFlowPanel
   prices: Record<string, MarketPrice>;
   candles: Record<string, Candle[]>; // key: "symbol|timeframe"
   connectionStatus: ConnectionStatus;

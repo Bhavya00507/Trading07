@@ -348,9 +348,11 @@ async def execute_order_fill(db: AsyncSession, order: Order, exec_price: float):
             position.quantity = new_qty
             position.average_price = new_avg
             position.updated_at = datetime.now(timezone.utc)
-            # Inherit SL/TP
-            position.stop_loss = order.stop_loss
-            position.take_profit = order.take_profit
+            # Inherit SL/TP if provided
+            if order.stop_loss is not None:
+                position.stop_loss = order.stop_loss
+            if order.take_profit is not None:
+                position.take_profit = order.take_profit
             position.commission = float(position.commission or 0.0) + commission_val
         else:
             abs_old_qty = abs(old_qty)
@@ -1132,14 +1134,14 @@ async def process_market_tick(db: AsyncSession, symbol: str, price: float):
         tp_triggered = False
         
         if pos.quantity > 0:
-            if pos.stop_loss and price <= pos.stop_loss:
+            if pos.stop_loss and pos.stop_loss > 0 and price <= pos.stop_loss:
                 sl_triggered = True
-            elif pos.take_profit and price >= pos.take_profit:
+            elif pos.take_profit and pos.take_profit > 0 and price >= pos.take_profit:
                 tp_triggered = True
         elif pos.quantity < 0:
-            if pos.stop_loss and price >= pos.stop_loss:
+            if pos.stop_loss and pos.stop_loss > 0 and price >= pos.stop_loss:
                 sl_triggered = True
-            elif pos.take_profit and price <= pos.take_profit:
+            elif pos.take_profit and pos.take_profit > 0 and price <= pos.take_profit:
                 tp_triggered = True
                 
         if sl_triggered or tp_triggered:

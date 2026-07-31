@@ -159,6 +159,8 @@ imports:
  &#8226;   <a href="#functools">functools</a>
  &#8226;   <a href="#genericpath">genericpath</a>
  &#8226;   <a href="#heapq">heapq</a>
+ &#8226;   <a href="#importlib.abc">importlib.abc</a>
+ &#8226;   <a href="#importlib.util">importlib.util</a>
  &#8226;   <a href="#io">io</a>
  &#8226;   <a href="#jinja2">jinja2</a>
  &#8226;   <a href="#keyword">keyword</a>
@@ -172,6 +174,7 @@ imports:
  &#8226;   <a href="#posixpath">posixpath</a>
  &#8226;   <a href="#psycopg">psycopg</a>
  &#8226;   <a href="#psycopg_binary">psycopg_binary</a>
+ &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pyi_rth_cryptography_openssl.py">pyi_rth_cryptography_openssl.py</a>
  &#8226;   <a href="#pyi_rth_inspect.py">pyi_rth_inspect.py</a>
  &#8226;   <a href="#pyi_rth_multiprocessing.py">pyi_rth_multiprocessing.py</a>
@@ -860,6 +863,38 @@ imported by:
 <span class="moduletype">MissingModule</span>  <div class="import">
 imported by:
     <a href="#dotenv.ipython">dotenv.ipython</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="MetaTrader5"></a>
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/MetaTrader5/__init__.py" type="text/plain"><tt>MetaTrader5</tt></a>
+<span class="moduletype">Package</span>  <div class="import">
+imports:
+    <a href="#MetaTrader5._core">MetaTrader5._core</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#MetaTrader5._core">MetaTrader5._core</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="MetaTrader5._core"></a>
+  <tt>MetaTrader5._core</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\MetaTrader5\_core.cp314-win_amd64.pyd</tt></span>  <div class="import">
+imports:
+    <a href="#MetaTrader5">MetaTrader5</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#MetaTrader5">MetaTrader5</a>
 
   </div>
 
@@ -5842,9 +5877,11 @@ imports:
 imported by:
     <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.health">app.api.health</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
+ &#8226;   <a href="#app.api.license">app.api.license</a>
  &#8226;   <a href="#app.api.market">app.api.market</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
  &#8226;   <a href="#app.api.paper">app.api.paper</a>
@@ -5911,6 +5948,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#app.api.alerts">app.api.alerts</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
@@ -5920,6 +5958,31 @@ imported by:
  &#8226;   <a href="#app.api.sync">app.api.sync</a>
  &#8226;   <a href="#app.api.workspaces">app.api.workspaces</a>
  &#8226;   <a href="#app.main">app.main</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="app.api.brokers"></a>
+  <a target="code" href="///D:/Trading07/backend/app/api/brokers.py" type="text/plain"><tt>app.api.brokers</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#app.api">app.api</a>
+ &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.database.session">app.database.session</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
+ &#8226;   <a href="#fastapi">fastapi</a>
+ &#8226;   <a href="#pydantic">pydantic</a>
+ &#8226;   <a href="#sqlalchemy">sqlalchemy</a>
+ &#8226;   <a href="#sqlalchemy.ext.asyncio">sqlalchemy.ext.asyncio</a>
+ &#8226;   <a href="#typing">typing</a>
+ &#8226;   <a href="#uuid">uuid</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#app.main">app.main</a>
 
   </div>
 
@@ -5986,6 +6049,25 @@ imports:
  &#8226;   <a href="#sqlalchemy.ext.asyncio">sqlalchemy.ext.asyncio</a>
  &#8226;   <a href="#typing">typing</a>
  &#8226;   <a href="#uuid">uuid</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#app.main">app.main</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="app.api.license"></a>
+  <a target="code" href="///D:/Trading07/backend/app/api/license.py" type="text/plain"><tt>app.api.license</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#app.api">app.api</a>
+ &#8226;   <a href="#fastapi">fastapi</a>
+ &#8226;   <a href="#pydantic">pydantic</a>
+ &#8226;   <a href="#typing">typing</a>
 
   </div>
   <div class="import">
@@ -6373,6 +6455,7 @@ imports:
 imported by:
     <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
@@ -6397,9 +6480,11 @@ imports:
     <a href="#app">app</a>
  &#8226;   <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.health">app.api.health</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
+ &#8226;   <a href="#app.api.license">app.api.license</a>
  &#8226;   <a href="#app.api.market">app.api.market</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
  &#8226;   <a href="#app.api.paper">app.api.paper</a>
@@ -6419,6 +6504,7 @@ imports:
  &#8226;   <a href="#app.websocket.manager">app.websocket.manager</a>
  &#8226;   <a href="#asyncio">asyncio</a>
  &#8226;   <a href="#collections">collections</a>
+ &#8226;   <a href="#contextlib">contextlib</a>
  &#8226;   <a href="#datetime">datetime</a>
  &#8226;   <a href="#fastapi">fastapi</a>
  &#8226;   <a href="#fastapi.exceptions">fastapi.exceptions</a>
@@ -6713,7 +6799,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#app.services.gold_api_service">app.services.gold_api_service</a>
+    <a href="#app.services.broker_service">app.services.broker_service</a>
+ &#8226;   <a href="#app.services.gold_api_service">app.services.gold_api_service</a>
  &#8226;   <a href="#app.services.instrument_registry">app.services.instrument_registry</a>
  &#8226;   <a href="#app.services.instruments">app.services.instruments</a>
  &#8226;   <a href="#app.services.market_data">app.services.market_data</a>
@@ -6723,6 +6810,33 @@ imported by:
  &#8226;   <a href="#app.services.news_service">app.services.news_service</a>
  &#8226;   <a href="#app.services.order_engine">app.services.order_engine</a>
  &#8226;   <a href="#app.services.risk_engine">app.services.risk_engine</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="app.services.broker_service"></a>
+  <a target="code" href="///D:/Trading07/backend/app/services/broker_service.py" type="text/plain"><tt>app.services.broker_service</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#MetaTrader5">MetaTrader5</a>
+ &#8226;   <a href="#app.services">app.services</a>
+ &#8226;   <a href="#asyncio">asyncio</a>
+ &#8226;   <a href="#datetime">datetime</a>
+ &#8226;   <a href="#hashlib">hashlib</a>
+ &#8226;   <a href="#hmac">hmac</a>
+ &#8226;   <a href="#httpx">httpx</a>
+ &#8226;   <a href="#json">json</a>
+ &#8226;   <a href="#time">time</a>
+ &#8226;   <a href="#typing">typing</a>
+ &#8226;   <a href="#uuid">uuid</a>
+ &#8226;   <a href="#websockets">websockets</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#app.api.brokers">app.api.brokers</a>
 
   </div>
 
@@ -7187,6 +7301,7 @@ imported by:
  &#8226;   <a href="#app.api.positions">app.api.positions</a>
  &#8226;   <a href="#app.api.ws">app.api.ws</a>
  &#8226;   <a href="#app.main">app.main</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.gold_api_service">app.services.gold_api_service</a>
  &#8226;   <a href="#app.services.market_data">app.services.market_data</a>
  &#8226;   <a href="#app.services.market_data_service">app.services.market_data_service</a>
@@ -10749,8 +10864,7 @@ imported by:
   <a target="code" href="///C:/Program%20Files/Python314/Lib/colorsys.py" type="text/plain"><tt>colorsys</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imported by:
-    <a href="#pydantic">pydantic</a>
- &#8226;   <a href="#pydantic.color">pydantic.color</a>
+    <a href="#pydantic.color">pydantic.color</a>
  &#8226;   <a href="#rich.__main__">rich.__main__</a>
  &#8226;   <a href="#rich.color">rich.color</a>
  &#8226;   <a href="#rich.palette">rich.palette</a>
@@ -11151,6 +11265,7 @@ imported by:
  &#8226;   <a href="#anyio.abc._eventloop">anyio.abc._eventloop</a>
  &#8226;   <a href="#anyio.abc._sockets">anyio.abc._sockets</a>
  &#8226;   <a href="#anyio.from_thread">anyio.from_thread</a>
+ &#8226;   <a href="#app.main">app.main</a>
  &#8226;   <a href="#asyncio.staggered">asyncio.staggered</a>
  &#8226;   <a href="#asyncpg.connection">asyncpg.connection</a>
  &#8226;   <a href="#attr._make">attr._make</a>
@@ -12861,7 +12976,6 @@ imported by:
  &#8226;   <a href="#psycopg._conninfo_utils">psycopg._conninfo_utils</a>
  &#8226;   <a href="#psycopg._tpc">psycopg._tpc</a>
  &#8226;   <a href="#psycopg.errors">psycopg.errors</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.dataclasses">pydantic.dataclasses</a>
  &#8226;   <a href="#pydantic.json">pydantic.json</a>
  &#8226;   <a href="#pydantic.schema">pydantic.schema</a>
@@ -12914,6 +13028,7 @@ imported by:
  &#8226;   <a href="#app.api.ws">app.api.ws</a>
  &#8226;   <a href="#app.core.auth">app.core.auth</a>
  &#8226;   <a href="#app.main">app.main</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.market_providers">app.services.market_providers</a>
  &#8226;   <a href="#app.services.market_session">app.services.market_session</a>
  &#8226;   <a href="#app.services.news_service">app.services.news_service</a>
@@ -12994,7 +13109,6 @@ imported by:
  &#8226;   <a href="#psycopg.types.numeric">psycopg.types.numeric</a>
  &#8226;   <a href="#psycopg.types.range">psycopg.types.range</a>
  &#8226;   <a href="#psycopg2">psycopg2</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.errors">pydantic.errors</a>
  &#8226;   <a href="#pydantic.json">pydantic.json</a>
  &#8226;   <a href="#pydantic.schema">pydantic.schema</a>
@@ -13128,7 +13242,6 @@ imported by:
  &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#dotenv.parser">dotenv.parser</a>
  &#8226;   <a href="#dotenv.variables">dotenv.variables</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.env_settings">pydantic.env_settings</a>
  &#8226;   <a href="#uvicorn.config">uvicorn.config</a>
 
@@ -13825,7 +13938,6 @@ imported by:
 <span class="moduletype">MissingModule</span>  <div class="import">
 imported by:
     <a href="#fastapi.openapi.models">fastapi.openapi.models</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic._hypothesis_plugin">pydantic._hypothesis_plugin</a>
  &#8226;   <a href="#pydantic.networks">pydantic.networks</a>
 
@@ -16558,9 +16670,11 @@ imports:
 imported by:
     <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.health">app.api.health</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
+ &#8226;   <a href="#app.api.license">app.api.license</a>
  &#8226;   <a href="#app.api.market">app.api.market</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
  &#8226;   <a href="#app.api.paper">app.api.paper</a>
@@ -19400,6 +19514,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#app.core.auth">app.core.auth</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#asyncpg.protocol.protocol">asyncpg.protocol.protocol</a>
  &#8226;   <a href="#hmac">hmac</a>
  &#8226;   <a href="#httpx._auth">httpx._auth</a>
@@ -19456,7 +19571,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#asyncpg.protocol.protocol">asyncpg.protocol.protocol</a>
+    <a href="#app.services.broker_service">app.services.broker_service</a>
+ &#8226;   <a href="#asyncpg.protocol.protocol">asyncpg.protocol.protocol</a>
  &#8226;   <a href="#jwt.algorithms">jwt.algorithms</a>
  &#8226;   <a href="#multiprocessing.connection">multiprocessing.connection</a>
  &#8226;   <a href="#passlib.utils">passlib.utils</a>
@@ -20756,6 +20872,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#app.main">app.main</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.gold_api_service">app.services.gold_api_service</a>
  &#8226;   <a href="#app.services.market_data">app.services.market_data</a>
  &#8226;   <a href="#app.services.market_data_service">app.services.market_data_service</a>
@@ -21680,6 +21797,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#importlib.metadata">importlib.metadata</a>
+ &#8226;   <a href="#main.py">main.py</a>
 
   </div>
 
@@ -22095,6 +22213,7 @@ imported by:
     <a href="#alembic.script.write_hooks">alembic.script.write_hooks</a>
  &#8226;   <a href="#alembic.util.pyfiles">alembic.util.pyfiles</a>
  &#8226;   <a href="#jinja2.loaders">jinja2.loaders</a>
+ &#8226;   <a href="#main.py">main.py</a>
  &#8226;   <a href="#mako.compat">mako.compat</a>
  &#8226;   <a href="#numpy.testing._private.extbuild">numpy.testing._private.extbuild</a>
  &#8226;   <a href="#pkgutil">pkgutil</a>
@@ -22396,7 +22515,6 @@ imported by:
  &#8226;   <a href="#psycopg._conninfo_utils">psycopg._conninfo_utils</a>
  &#8226;   <a href="#psycopg.types.net">psycopg.types.net</a>
  &#8226;   <a href="#psycopg2._ipaddress">psycopg2._ipaddress</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic._hypothesis_plugin">pydantic._hypothesis_plugin</a>
  &#8226;   <a href="#pydantic.json">pydantic.json</a>
  &#8226;   <a href="#pydantic.networks">pydantic.networks</a>
@@ -23222,6 +23340,7 @@ imported by:
  &#8226;   <a href="#app.api.positions">app.api.positions</a>
  &#8226;   <a href="#app.api.ws">app.api.ws</a>
  &#8226;   <a href="#app.main">app.main</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.market_data">app.services.market_data</a>
  &#8226;   <a href="#app.services.order_engine">app.services.order_engine</a>
  &#8226;   <a href="#app.websocket.manager">app.websocket.manager</a>
@@ -23252,7 +23371,6 @@ imported by:
  &#8226;   <a href="#pdb">pdb</a>
  &#8226;   <a href="#psycopg.types.json">psycopg.types.json</a>
  &#8226;   <a href="#psycopg2._json">psycopg2._json</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic._hypothesis_plugin">pydantic._hypothesis_plugin</a>
  &#8226;   <a href="#pydantic.config">pydantic.config</a>
  &#8226;   <a href="#pydantic.error_wrappers">pydantic.error_wrappers</a>
@@ -34610,7 +34728,6 @@ imported by:
  &#8226;   <a href="#pathlib.types">pathlib.types</a>
  &#8226;   <a href="#psycopg._connection_info">psycopg._connection_info</a>
  &#8226;   <a href="#psycopg.pq.misc">psycopg.pq.misc</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.env_settings">pydantic.env_settings</a>
  &#8226;   <a href="#pydantic.errors">pydantic.errors</a>
  &#8226;   <a href="#pydantic.json">pydantic.json</a>
@@ -38087,17 +38204,10 @@ imported by:
 
 <div class="node">
   <a name="pydantic"></a>
-  <tt>pydantic</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\__init__.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/__init__.py" type="text/plain"><tt>pydantic</tt></a>
+<span class="moduletype">Package</span>  <div class="import">
 imports:
-    <a href="#colorsys">colorsys</a>
- &#8226;   <a href="#dataclasses">dataclasses</a>
- &#8226;   <a href="#decimal">decimal</a>
- &#8226;   <a href="#dotenv">dotenv</a>
- &#8226;   <a href="#email_validator">email_validator</a>
- &#8226;   <a href="#ipaddress">ipaddress</a>
- &#8226;   <a href="#json">json</a>
- &#8226;   <a href="#pathlib">pathlib</a>
- &#8226;   <a href="#pydantic">pydantic</a>
+    <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.PydanticSchemaGenerationError">pydantic.PydanticSchemaGenerationError</a>
  &#8226;   <a href="#pydantic.TypeAdapter">pydantic.TypeAdapter</a>
  &#8226;   <a href="#pydantic._hypothesis_plugin">pydantic._hypothesis_plugin</a>
@@ -38152,8 +38262,6 @@ imports:
  &#8226;   <a href="#pydantic.validators">pydantic.validators</a>
  &#8226;   <a href="#pydantic.version">pydantic.version</a>
  &#8226;   <a href="#sys">sys</a>
- &#8226;   <a href="#typing_extensions">typing_extensions</a>
- &#8226;   <a href="#uuid">uuid</a>
  &#8226;   <a href="#warnings">warnings</a>
 
   </div>
@@ -38161,8 +38269,10 @@ imports:
 imported by:
     <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
+ &#8226;   <a href="#app.api.license">app.api.license</a>
  &#8226;   <a href="#app.api.market">app.api.market</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
  &#8226;   <a href="#app.api.playbooks">app.api.playbooks</a>
@@ -38179,6 +38289,7 @@ imported by:
  &#8226;   <a href="#fastapi.security.http">fastapi.security.http</a>
  &#8226;   <a href="#fastapi.types">fastapi.types</a>
  &#8226;   <a href="#fastapi.utils">fastapi.utils</a>
+ &#8226;   <a href="#main.py">main.py</a>
  &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic._hypothesis_plugin">pydantic._hypothesis_plugin</a>
  &#8226;   <a href="#pydantic.annotated_types">pydantic.annotated_types</a>
@@ -38237,7 +38348,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic._hypothesis_plugin"></a>
-  <tt>pydantic._hypothesis_plugin</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\_hypothesis_plugin.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/_hypothesis_plugin.py" type="text/plain"><tt>pydantic._hypothesis_plugin</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#contextlib">contextlib</a>
  &#8226;   <a href="#datetime">datetime</a>
@@ -38265,7 +38377,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.annotated_types"></a>
-  <tt>pydantic.annotated_types</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\annotated_types.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/annotated_types.py" type="text/plain"><tt>pydantic.annotated_types</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.fields">pydantic.fields</a>
@@ -38288,7 +38401,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.class_validators"></a>
-  <tt>pydantic.class_validators</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\class_validators.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/class_validators.py" type="text/plain"><tt>pydantic.class_validators</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#collections">collections</a>
  &#8226;   <a href="#functools">functools</a>
@@ -38322,7 +38436,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.color"></a>
-  <tt>pydantic.color</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\color.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/color.py" type="text/plain"><tt>pydantic.color</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#colorsys">colorsys</a>
  &#8226;   <a href="#math">math</a>
@@ -38348,7 +38463,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.config"></a>
-  <tt>pydantic.config</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\config.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/config.py" type="text/plain"><tt>pydantic.config</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#enum">enum</a>
  &#8226;   <a href="#json">json</a>
@@ -38383,7 +38499,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.dataclasses"></a>
-  <tt>pydantic.dataclasses</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\dataclasses.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/dataclasses.py" type="text/plain"><tt>pydantic.dataclasses</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#contextlib">contextlib</a>
  &#8226;   <a href="#copy">copy</a>
@@ -38418,7 +38535,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.datetime_parse"></a>
-  <tt>pydantic.datetime_parse</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\datetime_parse.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/datetime_parse.py" type="text/plain"><tt>pydantic.datetime_parse</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#datetime">datetime</a>
  &#8226;   <a href="#pydantic">pydantic</a>
@@ -38440,7 +38558,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.decorator"></a>
-  <tt>pydantic.decorator</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\decorator.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/decorator.py" type="text/plain"><tt>pydantic.decorator</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#functools">functools</a>
  &#8226;   <a href="#inspect">inspect</a>
@@ -38464,7 +38583,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.env_settings"></a>
-  <tt>pydantic.env_settings</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\env_settings.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/env_settings.py" type="text/plain"><tt>pydantic.env_settings</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#dotenv">dotenv</a>
  &#8226;   <a href="#os">os</a>
@@ -38491,7 +38611,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.error_wrappers"></a>
-  <tt>pydantic.error_wrappers</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\error_wrappers.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/error_wrappers.py" type="text/plain"><tt>pydantic.error_wrappers</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#json">json</a>
  &#8226;   <a href="#pydantic">pydantic</a>
@@ -38519,7 +38640,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.errors"></a>
-  <tt>pydantic.errors</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\errors.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/errors.py" type="text/plain"><tt>pydantic.errors</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#decimal">decimal</a>
  &#8226;   <a href="#pathlib">pathlib</a>
@@ -38551,7 +38673,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.fields"></a>
-  <tt>pydantic.fields</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\fields.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/fields.py" type="text/plain"><tt>pydantic.fields</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#'collections.abc'">'collections.abc'</a>
  &#8226;   <a href="#collections">collections</a>
@@ -38629,7 +38752,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.json"></a>
-  <tt>pydantic.json</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\json.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/json.py" type="text/plain"><tt>pydantic.json</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#collections">collections</a>
  &#8226;   <a href="#dataclasses">dataclasses</a>
@@ -38663,7 +38787,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.main"></a>
-  <tt>pydantic.main</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\main.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/main.py" type="text/plain"><tt>pydantic.main</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#abc">abc</a>
  &#8226;   <a href="#annotationlib">annotationlib</a>
@@ -38714,7 +38839,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.mypy"></a>
-  <tt>pydantic.mypy</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\mypy.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/mypy.py" type="text/plain"><tt>pydantic.mypy</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#'mypy.nodes'">'mypy.nodes'</a>
  &#8226;   <a href="#'mypy.options'">'mypy.options'</a>
@@ -38749,7 +38875,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.networks"></a>
-  <tt>pydantic.networks</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\networks.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/networks.py" type="text/plain"><tt>pydantic.networks</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#email_validator">email_validator</a>
  &#8226;   <a href="#ipaddress">ipaddress</a>
@@ -38779,7 +38906,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.parse"></a>
-  <tt>pydantic.parse</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\parse.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/parse.py" type="text/plain"><tt>pydantic.parse</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#enum">enum</a>
  &#8226;   <a href="#json">json</a>
@@ -38803,7 +38931,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.schema"></a>
-  <tt>pydantic.schema</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\schema.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/schema.py" type="text/plain"><tt>pydantic.schema</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#collections">collections</a>
  &#8226;   <a href="#dataclasses">dataclasses</a>
@@ -38843,7 +38972,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.tools"></a>
-  <tt>pydantic.tools</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\tools.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/tools.py" type="text/plain"><tt>pydantic.tools</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#functools">functools</a>
  &#8226;   <a href="#json">json</a>
@@ -38867,7 +38997,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.types"></a>
-  <tt>pydantic.types</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\types.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/types.py" type="text/plain"><tt>pydantic.types</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#abc">abc</a>
  &#8226;   <a href="#datetime">datetime</a>
@@ -38916,7 +39047,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.typing"></a>
-  <tt>pydantic.typing</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\typing.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/typing.py" type="text/plain"><tt>pydantic.typing</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#'collections.abc'">'collections.abc'</a>
  &#8226;   <a href="#functools">functools</a>
@@ -38961,7 +39093,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.utils"></a>
-  <tt>pydantic.utils</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\utils.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/utils.py" type="text/plain"><tt>pydantic.utils</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#collections">collections</a>
  &#8226;   <a href="#copy">copy</a>
@@ -39481,7 +39614,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.validators"></a>
-  <tt>pydantic.validators</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\validators.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/validators.py" type="text/plain"><tt>pydantic.validators</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#'collections.abc'">'collections.abc'</a>
  &#8226;   <a href="#collections">collections</a>
@@ -39522,7 +39656,8 @@ imported by:
 
 <div class="node">
   <a name="pydantic.version"></a>
-  <tt>pydantic.version</tt> <span class="moduletype"><tt>C:\Users\bhavy\AppData\Roaming\Python\Python314\site-packages\pydantic\version.cp314-win_amd64.pyd</tt></span>  <div class="import">
+  <a target="code" href="///C:/Users/bhavy/AppData/Roaming/Python/Python314/site-packages/pydantic/version.py" type="text/plain"><tt>pydantic.version</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#cython">cython</a>
  &#8226;   <a href="#importlib">importlib</a>
@@ -51463,6 +51598,7 @@ imported by:
  &#8226;   <a href="#alembic.util.sqla_compat">alembic.util.sqla_compat</a>
  &#8226;   <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
@@ -54862,6 +54998,7 @@ imports:
 imported by:
     <a href="#alembic.operations.base">alembic.operations.base</a>
  &#8226;   <a href="#app.api.alerts">app.api.alerts</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
@@ -61803,6 +61940,7 @@ imported by:
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
  &#8226;   <a href="#app.api.sync">app.api.sync</a>
  &#8226;   <a href="#app.main">app.main</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.gold_api_service">app.services.gold_api_service</a>
  &#8226;   <a href="#app.services.market_data">app.services.market_data</a>
  &#8226;   <a href="#app.services.market_data_service">app.services.market_data_service</a>
@@ -62488,14 +62626,17 @@ imported by:
  &#8226;   <a href="#anyio.to_thread">anyio.to_thread</a>
  &#8226;   <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
+ &#8226;   <a href="#app.api.license">app.api.license</a>
  &#8226;   <a href="#app.api.market">app.api.market</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
  &#8226;   <a href="#app.api.playbooks">app.api.playbooks</a>
  &#8226;   <a href="#app.api.positions">app.api.positions</a>
  &#8226;   <a href="#app.api.sync">app.api.sync</a>
  &#8226;   <a href="#app.api.workspaces">app.api.workspaces</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.gold_api_service">app.services.gold_api_service</a>
  &#8226;   <a href="#app.services.instrument_registry">app.services.instrument_registry</a>
  &#8226;   <a href="#app.services.instruments">app.services.instruments</a>
@@ -63179,7 +63320,6 @@ imported by:
  &#8226;   <a href="#numpy.random.bit_generator">numpy.random.bit_generator</a>
  &#8226;   <a href="#packaging.version">packaging.version</a>
  &#8226;   <a href="#psycopg._compat">psycopg._compat</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.annotated_types">pydantic.annotated_types</a>
  &#8226;   <a href="#pydantic.config">pydantic.config</a>
  &#8226;   <a href="#pydantic.dataclasses">pydantic.dataclasses</a>
@@ -64107,6 +64247,7 @@ imported by:
     <a href="#alembic.util.langhelpers">alembic.util.langhelpers</a>
  &#8226;   <a href="#app.api.alerts">app.api.alerts</a>
  &#8226;   <a href="#app.api.auth">app.api.auth</a>
+ &#8226;   <a href="#app.api.brokers">app.api.brokers</a>
  &#8226;   <a href="#app.api.history">app.api.history</a>
  &#8226;   <a href="#app.api.journals">app.api.journals</a>
  &#8226;   <a href="#app.api.orders">app.api.orders</a>
@@ -64129,6 +64270,7 @@ imported by:
  &#8226;   <a href="#app.models.trade_history">app.models.trade_history</a>
  &#8226;   <a href="#app.models.user">app.models.user</a>
  &#8226;   <a href="#app.models.workspace">app.models.workspace</a>
+ &#8226;   <a href="#app.services.broker_service">app.services.broker_service</a>
  &#8226;   <a href="#app.services.order_engine">app.services.order_engine</a>
  &#8226;   <a href="#app.services.risk_engine">app.services.risk_engine</a>
  &#8226;   <a href="#app.websocket.manager">app.websocket.manager</a>
@@ -64141,7 +64283,6 @@ imported by:
  &#8226;   <a href="#psycopg.types.uuid">psycopg.types.uuid</a>
  &#8226;   <a href="#psycopg2.extras">psycopg2.extras</a>
  &#8226;   <a href="#psycopg_binary._uuid">psycopg_binary._uuid</a>
- &#8226;   <a href="#pydantic">pydantic</a>
  &#8226;   <a href="#pydantic.json">pydantic.json</a>
  &#8226;   <a href="#pydantic.schema">pydantic.schema</a>
  &#8226;   <a href="#pydantic.types">pydantic.types</a>
@@ -65831,7 +65972,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#main.py">main.py</a>
+    <a href="#app.services.broker_service">app.services.broker_service</a>
+ &#8226;   <a href="#main.py">main.py</a>
  &#8226;   <a href="#uvicorn.protocols.websockets.auto">uvicorn.protocols.websockets.auto</a>
  &#8226;   <a href="#uvicorn.protocols.websockets.websockets_impl">uvicorn.protocols.websockets.websockets_impl</a>
  &#8226;   <a href="#websockets">websockets</a>

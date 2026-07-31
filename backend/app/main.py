@@ -65,9 +65,18 @@ from app.api.paper import router as paper_router
 from app.api.license import router as license_router
 from app.api.brokers import router as brokers_router
 from app.api.webhooks import router as webhooks_router
+from app.api.orderflow import router as orderflow_router
+from app.api.chart_trading import router as chart_trading_router
+from app.api.replay import router as replay_router
+from app.api.portfolio import router as portfolio_router
+from app.api.strategy_builder import router as strategy_builder_router
+from app.api.scanner import router as scanner_router
+from app.api.mbo import router as mbo_router, ws_router as mbo_ws_router
 
 from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
+from app.database.session import engine
+from app.models import Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -112,7 +121,6 @@ async def lifespan(app: FastAPI):
     try:
         import os
         from app.core.config import DATABASE_URL
-        from app.database.session import engine
         print(f"DATABASE_URL from config: {DATABASE_URL}")
         print(f"Engine URL: {engine.url}")
         print(f"Current Working Directory: {os.getcwd()}")
@@ -134,17 +142,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-from fastapi.middleware.cors import CORSMiddleware
-
 origins = [
     "http://localhost:5173",
-    "http://localhost:4173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://192.168.1.3:5173",
+    "http://192.168.1.3:5174",
+    "http://localhost:4173",
     "http://127.0.0.1:4173",
     "http://192.168.1.3:4173",
-    "http://192.168.1.3:5173",
-    "http://192.168.1.4:4173",
     "http://192.168.1.4:5173",
+    "http://192.168.1.4:5174",
+    "http://192.168.1.4:4173",
     "https://trading07.onrender.com"
 ]
 
@@ -244,6 +254,20 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         }
     )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    print(f"!!! [INTERNAL SERVER ERROR 500] {request.method} {request.url.path}: {exc}")
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": "Internal Server Error",
+            "message": str(exc)
+        }
+    )
+
 @app.middleware("http")
 async def safe_logging_middleware(request: Request, call_next):
     method = request.method
@@ -321,6 +345,14 @@ app.include_router(paper_router)
 app.include_router(license_router)
 app.include_router(brokers_router)
 app.include_router(webhooks_router)
+app.include_router(orderflow_router)
+app.include_router(chart_trading_router)
+app.include_router(replay_router)
+app.include_router(portfolio_router)
+app.include_router(strategy_builder_router)
+app.include_router(scanner_router)
+app.include_router(mbo_router)
+app.include_router(mbo_ws_router)
 
 
 # Startup event to launch market data feed and tables
