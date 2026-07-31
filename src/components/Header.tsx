@@ -4,6 +4,9 @@ import { useAppStore } from '../store/appStore';
 import { useOrderStore } from '../store/orderStore';
 import { useLiveAccountMetrics } from '../hooks/useLiveAccountMetrics';
 import { getBranding } from '../services/brandingService';
+import { WorkspaceSyncBar } from './WorkspaceSyncBar';
+import { WorkspaceManagerModal } from './WorkspaceManagerModal';
+import { workspaceSyncService } from '../services/workspaceSyncService';
 import './Header.css';
 
 const statusColors: Record<string, string> = {
@@ -91,6 +94,10 @@ const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     localStorage.setItem('quantum-user-saved-accounts', JSON.stringify(userAccounts));
   }, [userAccounts]);
+
+  useEffect(() => {
+    workspaceSyncService.initializeAutoSave();
+  }, []);
 
   // Close dropdown menu on click outside
   useEffect(() => {
@@ -302,6 +309,10 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         )}
+
+        {/* Cloud Workspace Sync Bar & Manager Modal */}
+        <WorkspaceSyncBar />
+        <WorkspaceManagerModal />
 
         {/* Live Status Badge */}
         <div className="status-badge" style={{ borderColor: color, color: color, boxShadow: `0 0 6px ${color}15`, marginRight: '12px' }}>

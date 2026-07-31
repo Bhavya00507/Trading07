@@ -52,7 +52,7 @@ from app.models.position import Position
 from app.models.trade_history import TradeHistory
 from app.models.journal import JournalEntry, DailyJournal
 from app.models.alert import DBPriceAlert
-from app.models.workspace import DBWorkspace
+from app.models.workspace import DBWorkspace, DBWorkspaceHistory, DBWorkspaceTemplate, DBWorkspaceSettings
 from app.models.playbook import SetupPatternModel
 from app.models.instrument import Instrument
 from app.models.webhook import WebhookKey, WebhookLog
