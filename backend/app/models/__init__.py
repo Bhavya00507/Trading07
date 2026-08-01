@@ -54,6 +54,7 @@ from app.models.journal import JournalEntry, DailyJournal
 from app.models.alert import DBPriceAlert
 from app.models.workspace import DBWorkspace, DBWorkspaceHistory, DBWorkspaceTemplate, DBWorkspaceSettings
 from app.models.workspace_sync import DBWorkspaceSync, DBWorkspaceVersion, DBWorkspaceShared, DBWorkspaceSnapshot
+from app.models.script_engine import DBScript, DBScriptVersion, DBInstalledScript, DBMarketplaceScript
 from app.models.playbook import SetupPatternModel
 from app.models.instrument import Instrument
 from app.models.webhook import WebhookKey, WebhookLog

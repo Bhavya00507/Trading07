@@ -6,6 +6,7 @@ import { useLiveAccountMetrics } from '../hooks/useLiveAccountMetrics';
 import { getBranding } from '../services/brandingService';
 import { WorkspaceSyncBar } from './WorkspaceSyncBar';
 import { WorkspaceManagerModal } from './WorkspaceManagerModal';
+import { ScriptEditor } from './ScriptStudio/ScriptEditor';
 import { workspaceSyncService } from '../services/workspaceSyncService';
 import './Header.css';
 
@@ -88,6 +89,7 @@ const Header: React.FC<HeaderProps> = ({
   const [newAccBroker, setNewAccBroker] = useState('MT5');
   const [newAccNumber, setNewAccNumber] = useState('');
   const [newAccBalance, setNewAccBalance] = useState('10000');
+  const [isScriptStudioOpen, setScriptStudioOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -305,6 +307,22 @@ const Header: React.FC<HeaderProps> = ({
                     🤖 Automation
                   </button>
                 )}
+                <button
+                  onClick={() => setScriptStudioOpen(true)}
+                  style={{
+                    background: isScriptStudioOpen ? '#a78bfa' : 'transparent',
+                    border: '1px solid #1b2235',
+                    borderRadius: '4px',
+                    color: isScriptStudioOpen ? '#070b14' : '#8e8e93',
+                    fontSize: '11px',
+                    padding: '4px 8px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                  title="Open Quantum Script Studio & Strategy Runtime"
+                >
+                  💻 Script Studio
+                </button>
               </>
             )}
           </div>
@@ -313,6 +331,7 @@ const Header: React.FC<HeaderProps> = ({
         {/* Cloud Workspace Sync Bar & Manager Modal */}
         <WorkspaceSyncBar />
         <WorkspaceManagerModal />
+        <ScriptEditor isOpen={isScriptStudioOpen} onClose={() => setScriptStudioOpen(false)} />
 
         {/* Live Status Badge */}
         <div className="status-badge" style={{ borderColor: color, color: color, boxShadow: `0 0 6px ${color}15`, marginRight: '12px' }}>
