@@ -8,6 +8,7 @@ import { WorkspaceSyncBar } from './WorkspaceSyncBar';
 import { WorkspaceManagerModal } from './WorkspaceManagerModal';
 import { ScriptEditor } from './ScriptStudio/ScriptEditor';
 import { UnifiedAICopilotWindow } from './AICopilot/UnifiedAICopilotWindow';
+import { MobileCompanionHub } from './Mobile/MobileCompanionHub';
 import { workspaceSyncService } from '../services/workspaceSyncService';
 import './Header.css';
 
@@ -92,6 +93,7 @@ const Header: React.FC<HeaderProps> = ({
   const [newAccBalance, setNewAccBalance] = useState('10000');
   const [isScriptStudioOpen, setScriptStudioOpen] = useState(false);
   const [isAICopilotOpen, setAICopilotOpen] = useState(false);
+  const [isMobileHubOpen, setMobileHubOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -337,9 +339,24 @@ const Header: React.FC<HeaderProps> = ({
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
-                  title="Open Quantum AI Copilot Enterprise Hub"
                 >
                   🤖 AI Copilot
+                </button>
+                <button
+                  onClick={() => setMobileHubOpen(true)}
+                  style={{
+                    background: isMobileHubOpen ? '#38bdf8' : 'transparent',
+                    border: '1px solid #1b2235',
+                    borderRadius: '4px',
+                    color: isMobileHubOpen ? '#070b14' : '#38bdf8',
+                    fontSize: '11px',
+                    padding: '4px 8px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                  title="Open Quantum Mobile Companion App"
+                >
+                  📱 Mobile App
                 </button>
               </>
             )}
@@ -351,6 +368,7 @@ const Header: React.FC<HeaderProps> = ({
         <WorkspaceManagerModal />
         <ScriptEditor isOpen={isScriptStudioOpen} onClose={() => setScriptStudioOpen(false)} />
         <UnifiedAICopilotWindow isOpen={isAICopilotOpen} onClose={() => setAICopilotOpen(false)} />
+        <MobileCompanionHub isOpen={isMobileHubOpen} onClose={() => setMobileHubOpen(false)} />
 
         {/* Live Status Badge */}
         <div className="status-badge" style={{ borderColor: color, color: color, boxShadow: `0 0 6px ${color}15`, marginRight: '12px' }}>
