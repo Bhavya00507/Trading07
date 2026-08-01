@@ -81,6 +81,7 @@ from app.api.ai_copilot import router as ai_copilot_router
 from app.api.smart_order_router import router as smart_order_router_api
 from app.api.mobile_companion import router as mobile_companion_router
 from app.api.institutional_scanner import router as institutional_scanner_router
+from app.api.portfolio_risk_lab import router as portfolio_risk_lab_router
 
 from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
@@ -371,6 +372,7 @@ app.include_router(ai_copilot_router)
 app.include_router(smart_order_router_api)
 app.include_router(mobile_companion_router)
 app.include_router(institutional_scanner_router)
+app.include_router(portfolio_risk_lab_router)
 
 
 # Startup event to launch market data feed and tables
