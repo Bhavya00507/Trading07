@@ -83,7 +83,7 @@ async def test_chart_market_sell_order():
         headers = {"Authorization": f"Bearer {token}"}
 
         res = await ac.post("/orders", json={
-            "symbol": "EURUSD",
+            "symbol": "ETHUSDT",
             "side": "sell",
             "type": "market",
             "quantity": 0.01,
@@ -92,7 +92,7 @@ async def test_chart_market_sell_order():
 
         assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
         data = res.json()
-        assert data["symbol"] == "EURUSD"
+        assert data["symbol"] == "ETHUSDT"
         assert data["side"] == "sell"
 
 
@@ -141,7 +141,7 @@ async def test_chart_limit_sell_order():
         headers = {"Authorization": f"Bearer {token}"}
 
         res = await ac.post("/orders", json={
-            "symbol": "EURUSD",
+            "symbol": "ETHUSDT",
             "side": "sell",
             "type": "limit",
             "quantity": 0.05,
@@ -195,7 +195,7 @@ async def test_chart_stop_sell_order():
         headers = {"Authorization": f"Bearer {token}"}
 
         res = await ac.post("/orders", json={
-            "symbol": "EURUSD",
+            "symbol": "ETHUSDT",
             "side": "sell",
             "type": "stop",
             "quantity": 0.01,
@@ -219,18 +219,18 @@ async def test_chart_order_with_sl_tp():
         headers = {"Authorization": f"Bearer {token}"}
 
         res = await ac.post("/orders", json={
-            "symbol": "XAUUSD",
+            "symbol": "BTCUSDT",
             "side": "buy",
             "type": "market",
             "quantity": 0.01,
-            "stop_loss": 1950.0,
-            "take_profit": 2050.0,
+            "stop_loss": 60000.0,
+            "take_profit": 70000.0,
             "account_type": "paper"
         }, headers=headers)
 
         assert res.status_code == 200, f"Expected 200: {res.text}"
         data = res.json()
-        assert data["symbol"] == "XAUUSD"
+        assert data["symbol"] == "BTCUSDT"
 
 
 @pytest.mark.asyncio
@@ -394,7 +394,7 @@ async def test_chart_reverse_position():
         headers = {"Authorization": f"Bearer {token}"}
 
         place_res = await ac.post("/orders", json={
-            "symbol": "EURUSD",
+            "symbol": "ETHUSDT",
             "side": "buy",
             "type": "market",
             "quantity": 0.01,

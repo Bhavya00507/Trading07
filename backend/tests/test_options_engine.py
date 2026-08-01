@@ -48,6 +48,33 @@ def test_volatility_surface():
     assert len(surf["surface_matrix"]) == 7
     assert len(surf["term_structure"]) == 7
 
+def test_probability_analysis():
+    prob = OptionsDeskService.calculate_probability("BTCUSDT", price=65000.0, strike=65000.0, dte=30)
+    assert prob["prob_itm_pct"] > 0
+    assert len(prob["one_sigma_range"]) == 2
+    assert len(prob["two_sigma_range"]) == 2
+
+def test_option_heatmaps():
+    hm = OptionsDeskService.get_heatmaps("BTCUSDT", price=65000.0)
+    assert len(hm["heatmaps"]) > 10
+    assert "gamma" in hm["heatmaps"][0]
+
+def test_execute_option_order():
+    res = OptionsDeskService.execute_option_order(
+        symbol="BTCUSDT",
+        order_action="buy_to_open",
+        order_type="limit",
+        legs=[{"strike": 65000.0, "type": "call", "quantity": 1, "premium": 1500.0}]
+    )
+    assert res["status"] in ["WORKING", "FILLED"]
+    assert res["estimated_margin_required"] > 0
+
+def test_backtest_options_strategy():
+    legs = [{"strike": 100.0, "type": "call", "action": "buy", "quantity": 1, "premium": 5.0}]
+    sim = OptionsDeskService.backtest_options_strategy(legs, underlying_price=100.0, days_simulated=30)
+    assert len(sim["timeline"]) == 31
+    assert "pnl_evolution" in sim["timeline"][-1]
+
 def test_options_scanner():
     scans = OptionsDeskService.run_options_scanner("unusual_volume")
     assert len(scans) > 0
