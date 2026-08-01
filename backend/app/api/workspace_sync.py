@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query, HTTPException, Body
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from app.services.workspace_sync import workspace_sync_engine
+from app.services.cloud_sync_service import cloud_sync_engine
 
 router = APIRouter(prefix="/api/workspace-sync", tags=["workspace-sync"])
 
@@ -329,3 +330,106 @@ async def resolve_conflict(req: ConflictRequest):
     ws["last_modified"] = time.time()
 
     return {"status": "resolved", "strategy": req.strategy, "config": final_config}
+
+
+# Device Management Endpoints
+class DeviceRenameRequest(BaseModel):
+    device_id: str
+    new_name: str
+
+class DeviceSignoutRequest(BaseModel):
+    device_id: str
+
+@router.get("/devices")
+async def get_logged_in_devices():
+    return {"devices": cloud_sync_engine.device_manager.get_all_devices()}
+
+@router.post("/devices/rename")
+async def rename_device(req: DeviceRenameRequest):
+    updated = cloud_sync_engine.device_manager.rename_device(req.device_id, req.new_name)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Device not found")
+    cloud_sync_engine.log_audit("RENAME_DEVICE", f"Renamed device {req.device_id} to '{req.new_name}'")
+    return {"status": "renamed", "device": updated}
+
+@router.post("/devices/signout")
+async def signout_device(req: DeviceSignoutRequest):
+    success = cloud_sync_engine.device_manager.sign_out_device(req.device_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Device not found")
+    cloud_sync_engine.log_audit("SIGNOUT_DEVICE", f"Signed out device {req.device_id}")
+    return {"status": "signed_out", "device_id": req.device_id}
+
+@router.post("/devices/signout-all")
+async def signout_all_devices():
+    count = cloud_sync_engine.device_manager.sign_out_all()
+    cloud_sync_engine.log_audit("SIGNOUT_ALL_DEVICES", f"Signed out {count} secondary devices")
+    return {"status": "signed_out_all", "count": count}
+
+
+# Cloud Backup & Rollback Endpoints
+class BackupCreateRequest(BaseModel):
+    workspace_id: str
+    backup_type: str = "MANUAL"
+
+class BackupRestoreRequest(BaseModel):
+    workspace_id: str
+    backup_id: str
+
+@router.get("/backups/{workspace_id}")
+async def get_workspace_backups(workspace_id: str):
+    return {"backups": cloud_sync_engine.backup_engine.get_backups(workspace_id)}
+
+@router.post("/backups/create")
+async def create_workspace_backup(req: BackupCreateRequest):
+    _seed_default_sync_workspace()
+    ws = _WORKSPACES_DB.get(req.workspace_id)
+    if not ws:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    config = workspace_sync_engine.decompress_payload(ws["config_json"])
+    backup = cloud_sync_engine.backup_engine.create_backup(req.workspace_id, config, req.backup_type)
+    cloud_sync_engine.log_audit("CREATE_BACKUP", f"Created {req.backup_type} backup for workspace {req.workspace_id}")
+    return {"status": "backup_created", "backup": backup}
+
+@router.post("/backups/restore")
+async def restore_workspace_backup(req: BackupRestoreRequest):
+    _seed_default_sync_workspace()
+    ws = _WORKSPACES_DB.get(req.workspace_id)
+    if not ws:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    restored_config = cloud_sync_engine.backup_engine.rollback_to_version(req.workspace_id, req.backup_id)
+    if not restored_config:
+        raise HTTPException(status_code=404, detail="Backup version not found")
+
+    compressed = workspace_sync_engine.compress_payload(restored_config)
+    ws["config_json"] = compressed
+    ws["checksum"] = workspace_sync_engine.compute_checksum(compressed)
+    ws["last_modified"] = time.time()
+    cloud_sync_engine.log_audit("RESTORE_BACKUP", f"Restored workspace {req.workspace_id} to backup {req.backup_id}")
+
+    return {"status": "restored", "workspace_id": req.workspace_id, "config": restored_config}
+
+
+# Layout Templates Endpoints
+class TemplateCreateRequest(BaseModel):
+    name: str
+    category: str = "Scalping"
+    layout: Dict[str, Any]
+
+@router.get("/templates")
+async def get_layout_templates():
+    return {"templates": cloud_sync_engine.template_manager.get_all_templates()}
+
+@router.post("/templates/create")
+async def create_layout_template(req: TemplateCreateRequest):
+    tpl = cloud_sync_engine.template_manager.save_template(req.name, req.category, req.layout)
+    cloud_sync_engine.log_audit("CREATE_TEMPLATE", f"Created layout template '{req.name}' ({req.category})")
+    return {"status": "template_created", "template": tpl}
+
+
+# Audit Logs & Security Telemetry Endpoint
+@router.get("/audit-logs")
+async def get_security_audit_logs():
+    return {"audit_logs": cloud_sync_engine.audit_log}
