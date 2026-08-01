@@ -74,6 +74,7 @@ from app.api.scanner import router as scanner_router
 from app.api.mbo import router as mbo_router, ws_router as mbo_ws_router
 from app.api.options import router as options_router
 from app.api.workspace import router as workspace_router
+from app.api.workspace_sync import router as workspace_sync_router
 
 from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
@@ -357,6 +358,7 @@ app.include_router(mbo_router)
 app.include_router(mbo_ws_router)
 app.include_router(options_router)
 app.include_router(workspace_router)
+app.include_router(workspace_sync_router)
 
 
 # Startup event to launch market data feed and tables
