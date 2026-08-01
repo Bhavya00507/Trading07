@@ -7,6 +7,7 @@ import { getBranding } from '../services/brandingService';
 import { WorkspaceSyncBar } from './WorkspaceSyncBar';
 import { WorkspaceManagerModal } from './WorkspaceManagerModal';
 import { ScriptEditor } from './ScriptStudio/ScriptEditor';
+import { UnifiedAICopilotWindow } from './AICopilot/UnifiedAICopilotWindow';
 import { workspaceSyncService } from '../services/workspaceSyncService';
 import './Header.css';
 
@@ -90,6 +91,7 @@ const Header: React.FC<HeaderProps> = ({
   const [newAccNumber, setNewAccNumber] = useState('');
   const [newAccBalance, setNewAccBalance] = useState('10000');
   const [isScriptStudioOpen, setScriptStudioOpen] = useState(false);
+  const [isAICopilotOpen, setAICopilotOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -323,6 +325,22 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   💻 Script Studio
                 </button>
+                <button
+                  onClick={() => setAICopilotOpen(true)}
+                  style={{
+                    background: isAICopilotOpen ? '#f59e0b' : 'transparent',
+                    border: '1px solid #1b2235',
+                    borderRadius: '4px',
+                    color: isAICopilotOpen ? '#070b14' : '#f59e0b',
+                    fontSize: '11px',
+                    padding: '4px 8px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                  title="Open Quantum AI Copilot Enterprise Hub"
+                >
+                  🤖 AI Copilot
+                </button>
               </>
             )}
           </div>
@@ -332,6 +350,7 @@ const Header: React.FC<HeaderProps> = ({
         <WorkspaceSyncBar />
         <WorkspaceManagerModal />
         <ScriptEditor isOpen={isScriptStudioOpen} onClose={() => setScriptStudioOpen(false)} />
+        <UnifiedAICopilotWindow isOpen={isAICopilotOpen} onClose={() => setAICopilotOpen(false)} />
 
         {/* Live Status Badge */}
         <div className="status-badge" style={{ borderColor: color, color: color, boxShadow: `0 0 6px ${color}15`, marginRight: '12px' }}>
