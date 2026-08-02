@@ -85,6 +85,7 @@ from app.api.portfolio_risk_lab import router as portfolio_risk_lab_router
 from app.api.marketplace import router as marketplace_router
 from app.api.autonomous_ai_engine import router as autonomous_ai_engine_router
 from app.api.hedge_fund_mam import router as hedge_fund_mam_router
+from app.api.enterprise_developer_platform import router as enterprise_developer_platform_router
 
 from app.services.market_data import start_market_feed
 from contextlib import asynccontextmanager
@@ -379,6 +380,7 @@ app.include_router(portfolio_risk_lab_router)
 app.include_router(marketplace_router)
 app.include_router(autonomous_ai_engine_router)
 app.include_router(hedge_fund_mam_router)
+app.include_router(enterprise_developer_platform_router)
 
 
 # Startup event to launch market data feed and tables
