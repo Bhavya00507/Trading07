@@ -6,6 +6,7 @@
   "author": "TradingPlatform Inc.",
   "main": "main.js",
   "scripts": {
+    "quantum": "python scripts/start_quantum.py",
     "dev": "node scripts/dev-server.js",
     "build": "vite build",
     "preview": "vite preview",
