@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { getApiUrl } from '../services/config';
 
 export interface StrategyNodeData {
   id: string;
@@ -19,109 +20,126 @@ export interface StrategyEdgeData {
 
 export interface StrategyMarketplaceItem {
   id: string;
-  name: string;
+  title: string;
   author: string;
-  category: string;
   rating: number;
   downloads: number;
-  win_rate: string;
+  winRatePct: number;
   description: string;
+  nodesCount: number;
 }
 
 interface StrategyBuilderState {
+  strategyId: string;
   strategyName: string;
   description: string;
   category: string;
-  version: string;
   nodes: StrategyNodeData[];
   edges: StrategyEdgeData[];
   selectedNodeId: string | null;
-
-  // Validation & AI
-  validationErrors: { type: string; message: string; nodeId?: string }[];
-  aiSuggestions: string[];
-
-  // Code Gen & Import
-  targetLang: string;
-  generatedCode: string;
-
-  // Optimization & Backtest
-  optimizationResults: any[];
-  backtestResult: any | null;
-
-  // Marketplace & Versions
+  validationErrors: string[];
   marketplaceItems: StrategyMarketplaceItem[];
-  versions: { version: string; date: string; changeLog: string }[];
-
+  generatedScriptCode: string;
+  
   // Actions
-  setStrategyMeta: (name: string, description?: string, category?: string) => void;
-  addNode: (node: StrategyNodeData) => void;
+  setStrategyName: (name: string) => void;
+  setDescription: (desc: string) => void;
+  setCategory: (cat: string) => void;
+  addNode: (node: Omit<StrategyNodeData, 'id'>) => void;
+  updateNodePosition: (id: string, position: { x: number; y: number }) => void;
+  updateNodeData: (id: string, data: Record<string, any>) => void;
   removeNode: (id: string) => void;
-  connectNodes: (source: string, target: string) => void;
-  updateNodeData: (id: string, newParams: Record<string, any>) => void;
+  addEdge: (edge: Omit<StrategyEdgeData, 'id'>) => void;
+  removeEdge: (id: string) => void;
   selectNode: (id: string | null) => void;
-
-  // API Actions
+  
   validateGraph: () => Promise<void>;
   aiGenerateStrategy: (prompt: string) => Promise<void>;
   aiImproveStrategy: () => Promise<void>;
-  generateCode: (targetLang: string) => Promise<void>;
-  importCode: (codeStr: string, sourceLang: string) => Promise<void>;
-  runOptimization: (method?: string) => Promise<void>;
-  fetchMarketplace: () => Promise<void>;
+  generateScriptCode: () => Promise<string>;
+  importScriptCode: (code: string) => Promise<void>;
+  optimizeParameters: () => Promise<void>;
+  fetchMarketplaceItems: () => Promise<void>;
+  clearCanvas: () => void;
 }
 
 export const useStrategyBuilderStore = create<StrategyBuilderState>()(
   persist(
     (set, get) => ({
-      strategyName: 'Golden Cross & ATR Trailing Stop',
-      description: 'Institutional trend-following strategy using EMA 20/50 crossover with ATR trailing stop loss.',
-      category: 'Trend',
-      version: '1.0.0',
+      strategyId: 'str-new-001',
+      strategyName: 'My Quant Strategy',
+      description: 'Custom visual strategy graph',
+      category: 'TREND_FOLLOWING',
       nodes: [
-        { id: 'n_1', type: 'INDICATOR', label: 'Fast EMA (20)', category: 'Indicator', position: { x: 100, y: 120 }, data: { indicator: 'EMA', period: 20 } },
-        { id: 'n_2', type: 'INDICATOR', label: 'Slow EMA (50)', category: 'Indicator', position: { x: 100, y: 240 }, data: { indicator: 'EMA', period: 50 } },
-        { id: 'n_3', type: 'LOGIC', label: 'Cross Above', category: 'Logic', position: { x: 320, y: 180 }, data: { operator: 'crosses_above' } },
-        { id: 'n_4', type: 'RISK', label: 'ATR Trailing Stop (1.5x)', category: 'Risk', position: { x: 520, y: 180 }, data: { sl_pct: 1.5, tp_pct: 3.0, risk_pct: 1.0 } },
-        { id: 'n_5', type: 'ORDER', label: 'Market Buy Order', category: 'Order', position: { x: 720, y: 180 }, data: { side: 'buy', quantity: 1.0 } },
+        {
+          id: 'node-1',
+          type: 'INDICATOR',
+          label: 'EMA (20/50) Cross',
+          category: 'Trend',
+          position: { x: 50, y: 100 },
+          data: { periodFast: 20, periodSlow: 50 }
+        },
+        {
+          id: 'node-2',
+          type: 'LOGIC',
+          label: 'RSI Filter < 70',
+          category: 'Filter',
+          position: { x: 280, y: 100 },
+          data: { period: 14, maxThreshold: 70 }
+        },
+        {
+          id: 'node-3',
+          type: 'ORDER',
+          label: 'Market Buy Order',
+          category: 'Execution',
+          position: { x: 520, y: 100 },
+          data: { sizeLots: 0.1, stopLossPips: 20, takeProfitPips: 40 }
+        }
       ],
       edges: [
-        { id: 'e1-3', source: 'n_1', target: 'n_3' },
-        { id: 'e2-3', source: 'n_2', target: 'n_3' },
-        { id: 'e3-4', source: 'n_3', target: 'n_4' },
-        { id: 'e4-5', source: 'n_4', target: 'n_5' },
+        { id: 'e1-2', source: 'node-1', target: 'node-2', label: 'CROSS_OVER' },
+        { id: 'e2-3', source: 'node-2', target: 'node-3', label: 'TRUE' }
       ],
-      selectedNodeId: 'n_1',
-
+      selectedNodeId: null,
       validationErrors: [],
-      aiSuggestions: [],
-      targetLang: 'Pine Script v6',
-      generatedCode: '',
-      optimizationResults: [],
-      backtestResult: null,
-
       marketplaceItems: [],
-      versions: [
-        { version: '1.0.0', date: '2026-07-31', changeLog: 'Initial visual strategy build' },
-      ],
+      generatedScriptCode: '',
 
-      setStrategyMeta: (name, description = '', category = 'Trend') => set({ strategyName: name, description, category }),
+      setStrategyName: (strategyName) => set({ strategyName }),
+      setDescription: (description) => set({ description }),
+      setCategory: (category) => set({ category }),
 
-      addNode: (node) => set((state) => ({ nodes: [...state.nodes, node], selectedNodeId: node.id })),
+      addNode: (nodeData) => set((state) => {
+        const newId = `node-${Date.now()}`;
+        return {
+          nodes: [...state.nodes, { ...nodeData, id: newId }],
+          selectedNodeId: newId
+        };
+      }),
+
+      updateNodePosition: (id, position) => set((state) => ({
+        nodes: state.nodes.map((n) => (n.id === id ? { ...n, position } : n))
+      })),
+
+      updateNodeData: (id, data) => set((state) => ({
+        nodes: state.nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...data } } : n))
+      })),
 
       removeNode: (id) => set((state) => ({
         nodes: state.nodes.filter((n) => n.id !== id),
         edges: state.edges.filter((e) => e.source !== id && e.target !== id),
-        selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
+        selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId
       })),
 
-      connectNodes: (source, target) => {
-        const edgeId = `e_${source}_${target}_${Date.now()}`;
-        set((state) => ({ edges: [...state.edges, { id: edgeId, source, target }] }));
-      },
+      addEdge: (edgeData) => set((state) => {
+        const newId = `edge-${Date.now()}`;
+        return {
+          edges: [...state.edges, { ...edgeData, id: newId }]
+        };
+      }),
 
-      updateNodeData: (id, newParams) => set((state) => ({
-        nodes: state.nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...newParams } } : n)),
+      removeEdge: (id) => set((state) => ({
+        edges: state.edges.filter((e) => e.id !== id)
       })),
 
       selectNode: (id) => set({ selectedNodeId: id }),
@@ -129,7 +147,8 @@ export const useStrategyBuilderStore = create<StrategyBuilderState>()(
       validateGraph: async () => {
         const { nodes, edges } = get();
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/validate', {
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/validate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nodes, edges }),
@@ -145,7 +164,8 @@ export const useStrategyBuilderStore = create<StrategyBuilderState>()(
 
       aiGenerateStrategy: async (prompt) => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/ai-generate', {
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/ai-generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt }),
@@ -158,7 +178,7 @@ export const useStrategyBuilderStore = create<StrategyBuilderState>()(
               category: data.category,
               nodes: data.nodes,
               edges: data.edges,
-              selectedNodeId: data.nodes?.[0]?.id || null,
+              generatedScriptCode: data.script_code || ''
             });
           }
         } catch (e) {
@@ -169,7 +189,8 @@ export const useStrategyBuilderStore = create<StrategyBuilderState>()(
       aiImproveStrategy: async () => {
         const { nodes, edges } = get();
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/ai-improve', {
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/ai-improve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nodes, edges }),
@@ -177,8 +198,9 @@ export const useStrategyBuilderStore = create<StrategyBuilderState>()(
           if (res.ok) {
             const data = await res.json();
             set({
-              nodes: data.improved_nodes || nodes,
-              aiSuggestions: data.suggestions || [],
+              nodes: data.nodes,
+              edges: data.edges,
+              description: data.description || get().description
             });
           }
         } catch (e) {
@@ -186,75 +208,89 @@ export const useStrategyBuilderStore = create<StrategyBuilderState>()(
         }
       },
 
-      generateCode: async (targetLang) => {
-        const { nodes, edges } = get();
+      generateScriptCode: async () => {
+        const { nodes, edges, strategyName } = get();
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/generate-code', {
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/generate-code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nodes, edges, target_lang: targetLang }),
+            body: JSON.stringify({ name: strategyName, nodes, edges }),
           });
           if (res.ok) {
             const data = await res.json();
-            set({ targetLang, generatedCode: data.code });
+            set({ generatedScriptCode: data.code });
+            return data.code;
           }
         } catch (e) {
-          console.error('Code generation failed:', e);
+          console.error('Script code generation failed:', e);
         }
+        return '';
       },
 
-      importCode: async (codeStr, sourceLang) => {
+      importScriptCode: async (code) => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/import-code', {
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/import-code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code_str: codeStr, source_lang: sourceLang }),
+            body: JSON.stringify({ code }),
           });
           if (res.ok) {
             const data = await res.json();
             set({
               strategyName: data.name,
-              description: data.description,
               nodes: data.nodes,
               edges: data.edges,
+              generatedScriptCode: code
             });
           }
         } catch (e) {
-          console.error('Code import failed:', e);
+          console.error('Script import failed:', e);
         }
       },
 
-      runOptimization: async (method = 'Grid Search') => {
+      optimizeParameters: async () => {
         const { nodes, edges } = get();
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/optimize', {
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/optimize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nodes, edges, method }),
+            body: JSON.stringify({ nodes, edges }),
           });
           if (res.ok) {
             const data = await res.json();
-            set({ optimizationResults: data.results || [] });
+            set({ nodes: data.nodes });
           }
         } catch (e) {
-          console.error('Optimization sweep failed:', e);
+          console.error('Optimization failed:', e);
         }
       },
 
-      fetchMarketplace: async () => {
+      fetchMarketplaceItems: async () => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/strategy-builder/marketplace');
+          const api = getApiUrl();
+          const res = await fetch(`${api}/api/strategy-builder/marketplace`);
           if (res.ok) {
             const data = await res.json();
-            set({ marketplaceItems: data });
+            set({ marketplaceItems: data.items || [] });
           }
         } catch (e) {
           console.error('Marketplace fetch failed:', e);
         }
       },
+
+      clearCanvas: () => set({
+        nodes: [],
+        edges: [],
+        selectedNodeId: null,
+        validationErrors: [],
+        generatedScriptCode: ''
+      })
     }),
     {
-      name: 'strategy-builder-store-v1',
+      name: 'quantum-strategy-builder-storage',
       storage: createJSONStorage(() => localStorage),
     }
   )

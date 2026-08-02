@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { getApiUrl } from '../services/config';
 
 export interface PortfolioAccountItem {
   id: string;
@@ -283,7 +284,7 @@ export const usePortfolioStore = create<PortfolioState>()(
       fetchPortfolioKPIs: async () => {
         const { baseCurrency } = get();
         try {
-          const res = await fetch(`http://127.0.0.1:8000/api/portfolio/kpis?base_currency=${baseCurrency}`);
+          const res = await fetch(`${getApiUrl()}/api/portfolio/kpis?base_currency=${baseCurrency}`);
           if (res.ok) {
             const data = await res.json();
             set({
@@ -307,7 +308,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
       fetchAccounts: async () => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/portfolio/accounts');
+          const res = await fetch(`${getApiUrl()}/api/portfolio/accounts`);
           if (res.ok) {
             const data = await res.json();
             const mapped: PortfolioAccountItem[] = data.map((a: any) => ({
@@ -335,7 +336,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
       fetchPositions: async () => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/portfolio/positions');
+          const res = await fetch(`${getApiUrl()}/api/portfolio/positions`);
           if (res.ok) {
             const data = await res.json();
             if (data.positions && data.positions.length > 0) {
@@ -368,7 +369,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
       fetchRiskAndCorrelation: async () => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/portfolio/risk');
+          const res = await fetch(`${getApiUrl()}/api/portfolio/risk`);
           if (res.ok) {
             const data = await res.json();
             set({
@@ -387,7 +388,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
       fetchBenchmarks: async () => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/portfolio/benchmarks');
+          const res = await fetch(`${getApiUrl()}/api/portfolio/benchmarks`);
           if (res.ok) {
             const data = await res.json();
             set({ benchmarks: data });
@@ -399,7 +400,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
       fetchDividends: async () => {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/portfolio/dividends');
+          const res = await fetch(`${getApiUrl()}/api/portfolio/dividends`);
           if (res.ok) {
             const data = await res.json();
             const mapped: DividendItem[] = data.map((d: any, idx: number) => ({
@@ -422,7 +423,7 @@ export const usePortfolioStore = create<PortfolioState>()(
       syncWithCloud: async () => {
         const { accounts, positions, baseCurrency } = get();
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/portfolio/sync', {
+          const res = await fetch(`${getApiUrl()}/api/portfolio/sync`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ baseCurrency, accountsCount: accounts.length, positionsCount: positions.length }),

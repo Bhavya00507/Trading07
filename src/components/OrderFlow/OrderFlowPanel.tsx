@@ -6,6 +6,7 @@ import { HeatMap } from './HeatMap';
 import { OrderFlowSettingsModal, OrderFlowSettingsConfig } from './OrderFlowSettings';
 import { IconSliders, IconRefreshCw, IconLayers, IconPlay, IconPause } from './Icons';
 import { useMarketStore } from '../../store/marketStore';
+import { getApiUrl } from '../../services/config';
 
 interface OrderFlowPanelProps {
   symbol?: string;
@@ -51,7 +52,7 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
     try {
       setLoading(true);
       const res = await fetch(
-        `http://127.0.0.1:8000/api/orderflow/analytics?symbol=${symbol}&timeframe=${timeframe}&limit=50&tick_size=${settings.tickSize}&imbalance_ratio=${settings.imbalanceRatio}`
+        `${getApiUrl()}/api/orderflow/analytics?symbol=${symbol}&timeframe=${timeframe}&limit=50&tick_size=${settings.tickSize}&imbalance_ratio=${settings.imbalanceRatio}`
       );
       if (res.ok) {
         const data = await res.json();
