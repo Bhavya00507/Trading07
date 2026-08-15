@@ -1,0 +1,79 @@
+{
+  "name": "trading-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Professional Desktop Trading Terminal with TradingView Integration",
+  "author": "TradingPlatform Inc.",
+  "main": "main.js",
+  "scripts": {
+    "quantum": "python scripts/start_quantum.py",
+    "dev": "node scripts/dev-server.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx",
+    "electron:dev": "npm run build && node scripts/launch-electron.js",
+    "electron:build": "npm run build && electron-builder build --win"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.0",
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.9",
+    "immer": "^11.1.8",
+    "lightweight-charts": "^4.0.0",
+    "playwright-core": "^1.61.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "uuid": "^9.0.0",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.62.1",
+    "@typescript-eslint/parser": "^8.62.1",
+    "@vitejs/plugin-react": "^4.0.0",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^8.50.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.quantum.terminal",
+    "productName": "Quantum Terminal",
+    "copyright": "Copyright © 2026 Quantum Terminal Inc.",
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "splash.html",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist/backend",
+        "to": "backend",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Quantum Terminal"
+    }
+  }
+}

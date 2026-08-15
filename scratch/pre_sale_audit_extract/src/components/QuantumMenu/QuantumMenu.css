@@ -1,0 +1,347 @@
+/* src/components/QuantumMenu/QuantumMenu.css - Institutional Quantum Menu Styling */
+
+/* Explicit Reset for all buttons & inputs within Quantum Menu to prevent default browser HTML styling */
+.quantum-menu-backdrop button,
+.quantum-menu-panel button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Backdrop Overlay */
+.quantum-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 13, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9990;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  animation: qmFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes qmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide-out Menu Panel */
+.quantum-menu-panel {
+  width: 88vw;
+  max-width: 360px;
+  min-width: 300px;
+  height: 100vh;
+  height: 100dvh;
+  background: #080d1a;
+  background: linear-gradient(180deg, #0b1120 0%, #070b14 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 9991;
+  animation: qmSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+@keyframes qmSlideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* Header */
+.quantum-menu-header {
+  height: 56px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  background: rgba(13, 19, 34, 0.6);
+}
+
+.quantum-menu-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.qm-sub {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #38bdf8;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.qm-main {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.quantum-menu-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  transition: all 0.15s ease;
+}
+
+.quantum-menu-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Scrollable Body */
+.quantum-menu-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.quantum-menu-body::-webkit-scrollbar {
+  width: 4px;
+}
+.quantum-menu-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* Section Container & Titles */
+.qm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qm-section-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #64748b;
+  text-transform: uppercase;
+  margin: 0 0 2px 2px;
+}
+
+.qm-section-title.intelligence-title {
+  color: #38bdf8;
+}
+
+/* Account Summary Card */
+.qm-account-card {
+  background: rgba(13, 19, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.qm-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.qm-acc-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.qm-acc-val {
+  font-size: 13px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.qm-acc-val.positive {
+  color: #10b981;
+}
+
+.qm-acc-val.accent-cyan {
+  color: #38bdf8;
+}
+
+/* Menu List & Full Width Menu Rows */
+.qm-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qm-menu-row {
+  width: 100% !important;
+  height: 46px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s ease-in-out !important;
+  box-sizing: border-box;
+}
+
+.qm-menu-row:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.qm-menu-row:active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(0.99);
+}
+
+.qm-menu-row.active {
+  background: rgba(56, 189, 248, 0.1) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  box-shadow: inset 3px 0 0 #38bdf8;
+}
+
+.qm-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qm-icon {
+  width: 20px;
+  font-size: 14px;
+  text-align: center;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qm-icon-gold {
+  color: #f59e0b;
+}
+
+.qm-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: 0.1px;
+}
+
+.qm-menu-row.active .qm-label {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.qm-chevron {
+  font-size: 16px;
+  color: #475569;
+  font-weight: 400;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.qm-menu-row:hover .qm-chevron {
+  color: #94a3b8;
+  transform: translateX(2px);
+}
+
+/* AI & Intelligence Styling */
+.qm-ai-row {
+  background: rgba(56, 189, 248, 0.03) !important;
+  border: 1px solid rgba(56, 189, 248, 0.06) !important;
+}
+
+.qm-ai-row:hover {
+  background: rgba(56, 189, 248, 0.08) !important;
+  border-color: rgba(56, 189, 248, 0.18) !important;
+}
+
+.qm-ai-icon {
+  color: #a78bfa;
+}
+
+/* Footer & Logout Section */
+.quantum-menu-footer {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 11, 20, 0.9);
+  flex-shrink: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+}
+
+.qm-logout-row {
+  width: 100% !important;
+  height: 44px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  transition: all 0.15s ease-in-out !important;
+  box-sizing: border-box;
+}
+
+.qm-logout-row:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+}
+
+.qm-logout-row:active {
+  transform: scale(0.99);
+}
+
+.qm-logout-icon {
+  font-size: 15px;
+  color: #f87171;
+}
+
+.qm-logout-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f87171;
+}
+
+/* Responsive Overrides */
+@media (min-width: 768px) {
+  .quantum-menu-panel {
+    max-width: 340px;
+  }
+}

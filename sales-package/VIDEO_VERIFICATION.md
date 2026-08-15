@@ -1,0 +1,55 @@
+# QUANTUM TERMINAL — BUYER DEMO VIDEO VERIFICATION
+
+CANONICAL VIDEO:
+d:\Trading07\sales-package\Quantum-Terminal-Buyer-Demo.mp4
+
+VIDEO SIZE:
+19.92 MB (20887563 bytes)
+
+VIDEO SHA256:
+3a6a6b0fec5e9031a468cbe8dd69c0936263b2a8652ffb10147c41ec15915c5f
+
+CONTAINER:
+MP4 (with +faststart moov atom header)
+
+VIDEO CODEC:
+H.264 (Main Profile, Level 4.0, yuv420p)
+
+AUDIO CODEC:
+AAC-LC (44.1 kHz, Stereo, 128 kbps)
+
+RESOLUTION:
+1920x1080
+
+FPS:
+30
+
+VIDEO STREAM:
+PASS
+
+AUDIO STREAM:
+PASS
+
+FFPROBE:
+PASS
+
+FFMPEG DECODE:
+PASS
+
+HUMAN AUDIO:
+PASS (Original Human Narration Track \`video-assets/human_narration_final.wav\`)
+
+AI VOICE:
+NO
+
+DUPLICATES CLEANED:
+2 Files Removed
+
+WORKING VIDEO DELETED:
+NO
+
+SOURCE CODE MODIFIED:
+NO
+
+FINAL STATUS:
+PASS

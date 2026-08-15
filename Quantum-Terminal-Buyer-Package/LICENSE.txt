@@ -1,0 +1,36 @@
+QUANTUM TERMINAL — ACQUISITION & LICENSE AGREEMENT (DRAFT PLACEHOLDER)
+
+Draft — final acquisition/license terms must be agreed between buyer and seller.
+
+================================================================================
+1. INTELLECTUAL PROPERTY & OWNERSHIP DISCLOSURE
+================================================================================
+This software codebase, including all source code, assets, documentation, design files,
+database schemas, and presentation materials ("Quantum Terminal"), is provided solely
+as a software acquisition candidate. 
+
+This document DOES NOT constitute a transfer of intellectual property rights, commercial
+license, or operational grant. Final ownership transfer and commercial licensing terms
+must be formally executed via a definitive Software Acquisition Agreement between buyer
+and seller.
+
+================================================================================
+2. PROTOTYPE & PLATFORM FOUNDATION NOTICE
+================================================================================
+Quantum Terminal is provided "as is" as an institutional software prototype and application
+foundation. The codebase includes standalone demonstration modes, paper trading execution
+engines, and technical heuristic fallback modules.
+
+The purchasing entity ("Buyer") acknowledges that commercial operation as a live trading
+platform or brokerage service requires the Buyer to:
+1. Obtain all necessary regulatory approvals, financial licenses, and compliance clearances.
+2. Integrate production-grade exchange/broker APIs and secure market data feeds.
+3. Conduct independent security audits, penetration testing, and infrastructure hardening.
+
+================================================================================
+3. LIMITATION OF LIABILITY
+================================================================================
+IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, OR SELLERS BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.

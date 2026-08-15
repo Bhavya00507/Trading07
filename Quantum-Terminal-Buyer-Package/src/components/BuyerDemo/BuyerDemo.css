@@ -1,0 +1,308 @@
+/* src/components/BuyerDemo/BuyerDemo.css */
+
+/* Demo Mode Badge in Header */
+.demo-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  color: #d4af37;
+  letter-spacing: 0.4px;
+  user-select: none;
+}
+
+.demo-mode-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #d4af37;
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.8);
+  animation: demoPulse 2s infinite ease-in-out;
+}
+
+@keyframes demoPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Feature Status Badges */
+.feature-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.feature-status-badge.paper {
+  background: rgba(0, 192, 118, 0.15);
+  border: 1px solid rgba(0, 192, 118, 0.35);
+  color: #00c076;
+}
+
+.feature-status-badge.simulated {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.feature-status-badge.integration {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+/* Presentation Trigger Buttons in Header */
+.demo-presentation-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: var(--text-secondary, #94a3b8);
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.demo-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent, #38bdf8);
+  color: var(--text-primary, #ffffff);
+}
+
+.demo-action-btn.reset-btn:hover {
+  border-color: var(--danger, #ff4d57);
+  color: #ff4d57;
+}
+
+/* Buyer Demo Dashboard Modal */
+.buyer-demo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 16, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.buyer-demo-modal-container {
+  background: #0b0f19;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.buyer-demo-modal-header {
+  padding: 16px 20px;
+  background: #0f1422;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.buyer-demo-modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buyer-demo-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.buyer-demo-modal-close:hover {
+  color: #ffffff;
+}
+
+.buyer-demo-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Grid of Compact Presentation Cards */
+.buyer-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.buyer-module-card {
+  background: rgba(15, 20, 34, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.buyer-module-card:hover {
+  background: rgba(20, 28, 48, 0.9);
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+}
+
+.buyer-module-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.buyer-module-icon {
+  font-size: 20px;
+}
+
+.buyer-module-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.buyer-module-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.buyer-module-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Guided Product Tour Modal */
+.tour-step-card {
+  width: 500px;
+  max-width: 90vw;
+  background: #0b0f19;
+  border: 1px solid #38bdf8;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tour-step-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tour-step-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.tour-step-content {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.tour-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Health Grid Status Row */
+.health-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(15, 20, 34, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+}
+
+.health-status-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.health-status-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.health-status-value.ready {
+  background: rgba(0, 192, 118, 0.2);
+  color: #00c076;
+}
+
+.health-status-value.connected {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+}
+
+.health-status-value.simulation {
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+}
+
+.health-status-value.heuristics {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
