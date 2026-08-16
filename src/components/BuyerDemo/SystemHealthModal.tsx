@@ -1,5 +1,6 @@
 // src/components/BuyerDemo/SystemHealthModal.tsx
 import React, { useEffect, useState } from 'react';
+import { getApiUrl } from '../../services/config';
 import './BuyerDemo.css';
 
 interface SystemHealthModalProps {
@@ -15,7 +16,7 @@ export const SystemHealthModal: React.FC<SystemHealthModalProps> = ({ isOpen, on
     if (!isOpen) return;
 
     // Test REST API ping to backend
-    fetch('http://127.0.0.1:8000/api/portfolio/summary')
+    fetch(`${getApiUrl()}/api/portfolio/summary`)
       .then((res) => {
         if (res.ok) setBackendStatus('ready');
         else setBackendStatus('unreachable');
@@ -62,7 +63,7 @@ export const SystemHealthModal: React.FC<SystemHealthModalProps> = ({ isOpen, on
                 <span>⚙️</span> Backend REST API (FastAPI / Python)
               </span>
               <span className={`health-status-value ${backendStatus === 'ready' ? 'ready' : 'simulation'}`}>
-                {backendStatus === 'ready' ? 'READY (PORT 8000)' : 'STANDALONE DEMO'}
+                {backendStatus === 'ready' ? 'READY' : 'STANDALONE DEMO'}
               </span>
             </div>
 

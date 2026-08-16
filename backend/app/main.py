@@ -158,26 +158,32 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-origins = [
+import os
+
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
-    "http://192.168.1.3:5173",
-    "http://192.168.1.3:5174",
     "http://localhost:4173",
     "http://127.0.0.1:4173",
-    "http://192.168.1.3:4173",
+    "http://192.168.1.3:5173",
     "http://192.168.1.4:5173",
-    "http://192.168.1.4:5174",
-    "http://192.168.1.4:4173",
-    "https://trading07.onrender.com"
 ]
+if cors_origins_env:
+    for o in cors_origins_env.split(","):
+        o_clean = o.strip()
+        if o_clean and o_clean not in allowed_origins:
+            allowed_origins.append(o_clean)
+
+allow_origin_regex = os.getenv("CORS_ORIGIN_REGEX", r"https://.*(vercel\.app|onrender\.com|netlify\.app|railway\.app)")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

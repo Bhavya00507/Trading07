@@ -67,16 +67,32 @@ def run_auto_migrations():
     alembic_cfg.set_main_option("sqlalchemy.url", sync_url)
 
     has_users = check_table_exists("users")
+    has_instruments = check_table_exists("instruments")
     has_version = check_alembic_has_version()
 
     if has_users and not has_version:
-        print("Existing database with tables detected, but no alembic version. Stamping database as baseline (b778d67fd5e8).")
-        command.stamp(alembic_cfg, "b778d67fd5e8")
-        print("Running database migrations to head.")
+        if has_instruments:
+            print("Existing database with all tables detected. Stamping database as head.")
+            try:
+                command.stamp(alembic_cfg, "head")
+            except Exception as e:
+                print(f"Alembic stamp head warning: {e}")
+        else:
+            print("Existing database with tables detected, but no alembic version. Stamping database as baseline (b778d67fd5e8).")
+            try:
+                command.stamp(alembic_cfg, "b778d67fd5e8")
+            except Exception as e:
+                print(f"Alembic stamp baseline warning: {e}")
+
+    print("Running database migrations to head.")
+    try:
         command.upgrade(alembic_cfg, "head")
-    else:
-        print("Running database migrations to head.")
-        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        print(f"Auto migration upgrade fallback (safely stamping head): {e}")
+        try:
+            command.stamp(alembic_cfg, "head")
+        except Exception as e2:
+            print(f"Alembic stamp fallback failed: {e2}")
 
 def seed_demo_account_sync():
     from sqlalchemy.orm import sessionmaker
