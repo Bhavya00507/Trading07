@@ -524,60 +524,41 @@ def _get_repo_root() -> Path:
 def _get_dist_dir() -> Path | None:
     # Look for the built dist next to the repo root
     p = _get_repo_root() / "dist"
-    return p if p.exists() else None
+    return p if (p.exists() and (p / "index.html").exists()) else None
 
 def _auto_build_frontend():
-    frontend_root = _get_repo_root()
-    dist_dir = frontend_root / "dist"
-    
+    dist_dir = _get_repo_root() / "dist"
     if dist_dir.exists() and (dist_dir / "index.html").exists():
         return
         
-    print("Frontend dist not found. Starting automatic build...")
-    
     npm_path = shutil.which("npm") or shutil.which("npm.cmd")
-    if not npm_path:
-        raise RuntimeError("npm is not installed. Node.js and npm must be installed to compile the frontend automatically.")
+    package_json = _get_repo_root() / "package.json"
+    
+    if not npm_path or not package_json.exists():
+        print("INFO: npm or package.json not available — running in standalone API mode.")
+        return
         
-    print(f"Detected frontend root: {frontend_root}")
-    print("Executing: npm install ...")
-    try:
-        subprocess.run(
-            ["npm", "install"],
-            cwd=str(frontend_root),
-            shell=True,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        print("npm install completed successfully.")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"npm install failed: {e.stderr or e.stdout}")
-        
-    print("Executing: npm run build ...")
+    print("Frontend dist not found. Attempting automatic build...")
     try:
         subprocess.run(
             ["npm", "run", "build"],
-            cwd=str(frontend_root),
+            cwd=str(_get_repo_root()),
             shell=True,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            timeout=120
         )
-        print("npm run build completed successfully.")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"npm run build failed: {e.stderr or e.stdout}")
-        
-    if not dist_dir.exists() or not (dist_dir / "index.html").exists():
-        raise RuntimeError("Frontend build completed but dist/index.html was not generated.")
+        print("Frontend build completed successfully.")
+    except Exception as e:
+        print(f"WARNING: Frontend build skipped or failed: {e}. Standalone API mode active.")
 
-# Resolve mode and auto-build if needed
+# Attempt optional build once on startup (non-blocking for server execution)
 try:
     _auto_build_frontend()
 except Exception as e:
-    print(f"Error checking/building frontend: {e}", file=sys.stderr)
+    print(f"INFO: Frontend check completed: {e}", file=sys.stderr)
 
 _dist = _get_dist_dir()
 if _dist:
@@ -586,7 +567,7 @@ if _dist:
         app.mount("/assets", StaticFiles(directory=str(_assets)), name="assets")
     print(f"Static serving: dist={_dist}  assets_exist={(_dist/'assets').exists()}")
 else:
-    print("WARNING: dist/ directory not found — static serving disabled")
+    print("INFO: dist/ directory not found — running as standalone backend API service")
 
 # API prefixes that must NOT be caught by the SPA fallback
 _API_PREFIXES = ("api/", "ws", "auth/", "orders", "positions", "history",
@@ -596,47 +577,38 @@ _API_PREFIXES = ("api/", "ws", "auth/", "orders", "positions", "history",
 
 @app.get("/")
 async def serve_root(request: Request):
-    """Serve the React SPA entry point."""
+    """Serve the React SPA entry point if built, or API status in standalone backend mode."""
     dist = _get_dist_dir()
-    if dist is None:
-        try:
-            _auto_build_frontend()
-            dist = _get_dist_dir()
-        except Exception as e:
-            return JSONResponse(
-                status_code=503,
-                content={"error": f"Frontend dist not found and auto-build failed: {str(e)}"}
-            )
-            
     if dist:
         index = dist / "index.html"
         if index.exists():
             return FileResponse(str(index), media_type="text/html")
-    return JSONResponse(status_code=404, content={"error": "index.html not found"})
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "online",
+            "service": "Quantum Terminal API",
+            "version": "1.0.0",
+            "docs": "/docs",
+            "health": "/health"
+        }
+    )
 
 @app.get("/{catchall:path}")
 async def serve_react_spa(request: Request, catchall: str):
-    """SPA fallback — return index.html for any non-API path."""
+    """SPA fallback — return index.html for any non-API path if dist is mounted, else 404."""
     if any(catchall.startswith(p) for p in _API_PREFIXES):
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail=f"Not found: /{catchall}")
 
     dist = _get_dist_dir()
-    if dist is None:
-        try:
-            _auto_build_frontend()
-            dist = _get_dist_dir()
-        except Exception as e:
-            return JSONResponse(
-                status_code=503,
-                content={"error": f"Frontend dist not found and auto-build failed: {str(e)}"}
-            )
-            
     if dist:
         index = dist / "index.html"
         if index.exists():
             return FileResponse(str(index), media_type="text/html")
-    return JSONResponse(status_code=404, content={"error": "index.html missing"})
+            
+    from fastapi import HTTPException
+    raise HTTPException(status_code=404, detail=f"Not found: /{catchall}")
 
 
 if __name__ == "__main__":
