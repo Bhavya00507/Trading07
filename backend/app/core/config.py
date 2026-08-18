@@ -29,6 +29,14 @@ if not DATABASE_URL:
         # Fallback to the absolute path of test.db in backend folder
         db_path = (Path(__file__).resolve().parent.parent.parent / "test.db")
     DATABASE_URL = f"sqlite+aiosqlite:///{db_path.as_posix()}"
+else:
+    # Normalize DATABASE_URL for async SQLAlchemy
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif DATABASE_URL.startswith("sqlite://") and not DATABASE_URL.startswith("sqlite+"):
+        DATABASE_URL = DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://", 1)
 
 JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-production-trading-core-key-2026")
 JWT_ALGORITHM = "HS256"

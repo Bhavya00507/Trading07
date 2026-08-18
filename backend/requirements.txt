@@ -1,6 +1,9 @@
 fastapi
 uvicorn[standard]
 sqlalchemy[asyncio]
+aiosqlite
+pytz
+python-multipart
 psycopg[binary]
 asyncpg
 python-dotenv
@@ -11,3 +14,4 @@ pydantic
 pytest
 pytest-asyncio
 alembic
+
