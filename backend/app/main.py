@@ -170,6 +170,7 @@ allowed_origins = [
     "http://127.0.0.1:4173",
     "http://192.168.1.3:5173",
     "http://192.168.1.4:5173",
+    "https://trading07-lx1o.vercel.app",
 ]
 if cors_origins_env:
     for o in cors_origins_env.split(","):
