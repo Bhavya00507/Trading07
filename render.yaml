@@ -3,8 +3,8 @@ services:
     name: quantum-terminal-backend
     env: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: PYTHONPATH=. uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
@@ -14,4 +14,5 @@ services:
         value: "https://trading07-lx1o.vercel.app"
       - key: SKIP_AUTO_BUILD
         value: "1"
-
+      - key: PYTHONPATH
+        value: "."

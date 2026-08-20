@@ -4,8 +4,6 @@ sqlalchemy[asyncio]
 aiosqlite
 pytz
 python-multipart
-psycopg[binary]
-asyncpg
 python-dotenv
 pyjwt
 websockets
