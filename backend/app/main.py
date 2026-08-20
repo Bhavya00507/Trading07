@@ -36,12 +36,16 @@ if pydantic.__version__.startswith("1."):
         BaseModel.model_dump_json = model_dump_json
 
 import sys
+import types
 from pathlib import Path
 
-# Ensure the backend directory is in sys.path when started from repo root (e.g. Render / Procfile)
 backend_dir = Path(__file__).resolve().parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
+repo_root = backend_dir.parent
+
+for p in [str(backend_dir), str(repo_root)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
 
 import uvicorn
 import asyncio
