@@ -30,8 +30,10 @@ export const getApiUrl = (): string => {
   return 'https://quantum-terminal-backend.onrender.com';
 };
 
-export const getWsUrl = (): string => {
+export const getWsUrl = (path: string = ''): string => {
   const apiUrl = getApiUrl();
   const wsProtocol = apiUrl.startsWith('https') ? 'wss:' : 'ws:';
-  return apiUrl.replace(/^http[s]?:/, wsProtocol);
+  const baseUrl = apiUrl.replace(/^http[s]?:/, wsProtocol);
+  const cleanPath = path ? (path.startsWith('/') ? path : `/${path}`) : '';
+  return `${baseUrl}${cleanPath}`;
 };

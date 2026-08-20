@@ -57,6 +57,24 @@ async def websocket_market_endpoint(websocket: WebSocket, token: str = Query(Non
     await manager.connect(websocket, user_id)
     print(f"--> WS [market] Connected: {user_id}")
     try:
+        from app.services.market_data import _latest_prices, _is_delayed_status
+        for sym, price in list(_latest_prices.items()):
+            initial_msg = {
+                "event_id": str(uuid.uuid4()),
+                "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
+                "type": "price_update",
+                "data": {
+                    "symbol": sym,
+                    "price": price,
+                    "time": int(datetime.now(timezone.utc).timestamp()),
+                    "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
+                    "is_delayed": _is_delayed_status.get(sym, False)
+                }
+            }
+            manager.send_to_socket(websocket, json.dumps(initial_msg))
+    except Exception as e:
+        print(f"WS [market] Initial snapshot send error: {e}")
+    try:
         while True:
             data = await websocket.receive_text()
             try:

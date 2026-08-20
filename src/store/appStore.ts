@@ -138,13 +138,16 @@ export const useAppStore = create<AppState>()(
               const instRes = await fetch(`${api}/market/instruments`);
               if (instRes.ok) {
                 const instData = await instRes.json();
-                const flattened = [
-                  ...instData.crypto,
-                  ...instData.forex,
-                  ...instData.indices,
-                  ...instData.metals
-                ];
-                set({ watchlist: flattened });
+                if (instData && typeof instData === 'object') {
+                  const crypto = Array.isArray(instData.crypto) ? instData.crypto : [];
+                  const forex = Array.isArray(instData.forex) ? instData.forex : [];
+                  const indices = Array.isArray(instData.indices) ? instData.indices : [];
+                  const metals = Array.isArray(instData.metals) ? instData.metals : [];
+                  const flattened = [...crypto, ...forex, ...indices, ...metals];
+                  if (flattened.length > 0) {
+                    set({ watchlist: flattened });
+                  }
+                }
               }
             } catch (e) {
               console.error('Failed to sync instruments:', e);
@@ -157,20 +160,31 @@ export const useAppStore = create<AppState>()(
               'Authorization': `Bearer ${token}`
             }
           });
-          if (res.status === 401) {
+          if (res.status === 401 || res.status === 403) {
             get().logout();
             return;
           }
-          if (!res.ok) throw new Error('Sync state failed');
+          if (!res.ok) {
+            console.warn(`Sync state non-OK status: ${res.status}`);
+            return;
+          }
           const data = await res.json();
+          if (!data || typeof data !== 'object') {
+            console.warn('Invalid sync-state data format:', data);
+            return;
+          }
           
-          // Atomically update all stores
+          // Atomically update all stores safely
           set({ 
-            account: data.account,
-            history: data.history || []
+            account: data.account || data.active_account || null,
+            history: Array.isArray(data.history) ? data.history : []
           });
-          useOrderStore.getState().setOrders(data.orders || []);
-          usePositionStore.getState().setPositions(data.positions || []);
+          if (Array.isArray(data.orders)) {
+            useOrderStore.getState().setOrders(data.orders);
+          }
+          if (Array.isArray(data.positions)) {
+            usePositionStore.getState().setPositions(data.positions);
+          }
         } catch (err) {
           console.error('State reconciliation failed:', err);
         }
