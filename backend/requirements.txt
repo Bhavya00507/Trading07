@@ -1,6 +1,6 @@
 fastapi
-uvicorn[standard]
-sqlalchemy[asyncio]
+uvicorn
+sqlalchemy
 aiosqlite
 pytz
 python-multipart
