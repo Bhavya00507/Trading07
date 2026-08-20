@@ -62,5 +62,7 @@ if __name__ == "__main__":
         print(f"[Startup Error] Database initialization failed: {e}", file=sys.stderr, flush=True)
         sys.exit(1)
         
-    print("[Startup] Launching Uvicorn server on http://0.0.0.0:8000 ...", flush=True)
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False, workers=1)
+    port = int(os.getenv("PORT", 8000))
+    print(f"[Startup] Launching Uvicorn server on http://0.0.0.0:{port} ...", flush=True)
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False, workers=1)
+
