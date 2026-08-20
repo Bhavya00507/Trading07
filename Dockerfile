@@ -6,11 +6,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
 
 # Copy backend requirements and install
-COPY backend/requirements.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy full codebase
 COPY . ./
+
+ENV PYTHONPATH=/app/backend:/app:.
+ENV SKIP_AUTO_BUILD=1
 
 # Expose port
 EXPOSE 8000

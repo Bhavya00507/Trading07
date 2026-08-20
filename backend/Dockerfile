@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend source code
 COPY . ./
 
+ENV PYTHONPATH=/app/backend:/app:.
+ENV SKIP_AUTO_BUILD=1
+
 # Expose port
 EXPOSE 8000
 
