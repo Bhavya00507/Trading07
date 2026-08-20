@@ -20,14 +20,12 @@ import sys
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    # Host PC mode: Force both dev and frozen desktop app backend to use the exact same test.db
-    # If the workspace D:/Trading07/backend exists, use it. Otherwise, use relative path.
     workspace_db = Path("D:/Trading07/backend/test.db")
     if workspace_db.parent.exists():
         db_path = workspace_db
     else:
-        # Fallback to the absolute path of test.db in backend folder
-        db_path = (Path(__file__).resolve().parent.parent.parent / "test.db")
+        db_dir = Path("/tmp") if os.name != "nt" else Path(__file__).resolve().parent.parent.parent
+        db_path = db_dir / "test.db"
     DATABASE_URL = f"sqlite+aiosqlite:///{db_path.as_posix()}"
 else:
     # Normalize DATABASE_URL for async SQLAlchemy
