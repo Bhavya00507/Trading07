@@ -10,3 +10,8 @@ services:
         value: 3.11.9
       - key: CORS_ORIGIN_REGEX
         value: "https://.*(vercel\\.app|onrender\\.com|netlify\\.app|railway\\.app)"
+      - key: CORS_ORIGINS
+        value: "https://trading07-lx1o.vercel.app"
+      - key: SKIP_AUTO_BUILD
+        value: "1"
+

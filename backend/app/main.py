@@ -180,15 +180,6 @@ if cors_origins_env:
 
 allow_origin_regex = os.getenv("CORS_ORIGIN_REGEX", r"https://.*(vercel\.app|onrender\.com|netlify\.app|railway\.app)")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_origin_regex=allow_origin_regex,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.get("/ping")
 async def ping_endpoint():
     return {"status": "ok"}
@@ -345,9 +336,16 @@ async def metrics_endpoint():
 
 from fastapi.middleware.gzip import GZipMiddleware
 
-# app.add_middleware(GZipMiddleware, minimum_size=1000)
+# CORSMiddleware added last to be the outermost middleware handling all requests and preflights
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# CORSMiddleware configured above
 
 # Include routers
 app.include_router(health_router)
@@ -528,6 +526,10 @@ def _get_dist_dir() -> Path | None:
     return p if (p.exists() and (p / "index.html").exists()) else None
 
 def _auto_build_frontend():
+    if os.getenv("SKIP_AUTO_BUILD") == "1" or os.getenv("RENDER") or os.getenv("PORT"):
+        print("INFO: Standalone backend API deployment detected — skipping frontend build check.")
+        return
+
     dist_dir = _get_repo_root() / "dist"
     if dist_dir.exists() and (dist_dir / "index.html").exists():
         return
